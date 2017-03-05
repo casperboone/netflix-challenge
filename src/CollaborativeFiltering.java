@@ -5,11 +5,17 @@
  */
 
 import java.lang.System;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.PriorityQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 public class CollaborativeFiltering {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
 
         // Read user list
         UserList userList = new UserList();
@@ -25,7 +31,7 @@ public class CollaborativeFiltering {
 
         // Make predictions file
         RatingList predRatings = new RatingList();
-        predRatings.readFile("data/predictions.csv", userList, movieList);
+        predRatings.readFile(args[0], userList, movieList);
 
         // Add ratings to user and movie lists
         userList.addRatings(ratings);
@@ -35,85 +41,53 @@ public class CollaborativeFiltering {
         predictRatings(userList, movieList, ratings, predRatings);
 
         // Write result file
-        predRatings.writeResultsFile("submission.csv");
+        predRatings.writeResultsFile("submission_"+System.currentTimeMillis()+".csv");
     }
 
     public static RatingList predictRatings(UserList userList,
-                                            MovieList movieList, RatingList ratingList, RatingList predRatings) {
+                                            MovieList movieList, RatingList ratingList, RatingList predRatings) throws InterruptedException {
+        // Compute mean of all ratings
+        ratingList.computeAverage();
 
-        long start = System.currentTimeMillis();
+        // Compute mean rating per movie
+        movieList.stream().forEach(Movie::computeAverage);
 
-        // Number of users and movies
-        int nU = userList.size();
-        int nM = movieList.size();
+        // Compute mean rating per user
+        userList.stream().forEach(User::computeAverage);
+
+
+        long startTime = System.currentTimeMillis();
+
+
+        int numberOfRatingsPerThread = 20;
+        int maxThreads = 20;
+
+        ExecutorService executorService = Executors.newFixedThreadPool(maxThreads);
         
         // Loop over to-be-predicted ratings
         System.out.println("Running predictions..");
-        for (int i = 0; i < predRatings.size(); i++) {
-            Rating predRating = predRatings.get(i);
+        for (int i = 0; i < predRatings.size(); i += numberOfRatingsPerThread) {
 
-            // Inform progress
-            if (i % 10 == 1) {
-                long secondsSoFar = ((System.currentTimeMillis() - start) / 1000);
-                int remainingItems = predRatings.size() - i - 1;
-                long expectedDuration = Math.round((secondsSoFar / (double) i) * remainingItems);
-                System.out.print("Running predictions " + (i + 1) + "/" + predRatings.size());
-                System.out.print(", so far it took " + secondsSoFar + " seconds. ");
-                System.out.println("With " + remainingItems + " more items to go, it will probably take another " + expectedDuration + " seconds.");
-            }
-
-            // Hard-code size of neighborhood
-            int N = 1000;
-
-            // Compute similarity with other users
-            PriorityQueue<Neighbour<User>> neighbours = new PriorityQueue<>(N);
-            for (User other : userList) {
-
-                // Compute similarity
-                double similarity = Util.calculateCosine(
-                    Util.subtractAverage(predRating.getUser().getRatings()),
-                    Util.subtractAverage(other.getRatings()),
-                    nM
-                );
-
-                // Make sure we only keep the top N
-                if (neighbours.size() < N) {
-                    neighbours.add(new Neighbour<>(other, similarity));
-                    continue;
-                }
-
-                // If the current size is > N, check if the first element has a lower similarity
-                if (neighbours.peek().getSimilarity() < similarity) {
-                    neighbours.poll();
-                    neighbours.add(new Neighbour<>(other, similarity));
-                }
-            }
-
-            // Construct weighted average
-            // r_xi = [sum over all neighbours y: sim(x,y) * r_yi] / sum over all neighbours y: sim(x,y)]
-            // In the average we only count those among the N neighbours who have rated i. (MMDS page 325)
-            double numerator = 0.0;
-            double denominator = 0.0;
-            for (Neighbour<User> neighbour : neighbours) {
-                Double neighbourRating = neighbour.getResource().getRatings().get(predRating.getMovie().getIndex()-1);
-                if (neighbourRating != null) {
-                    numerator += neighbour.getSimilarity() * neighbourRating;
-                    denominator += neighbour.getSimilarity();
-                }
-            }
-
-            double prediction = numerator / denominator;
-            // If there were no neighbours we have rated i, we set the prediction to a default
-            if (Double.isNaN(prediction)) {
-                prediction = 2.5;
-            }
-
-//            System.out.println(i + " " + predRating.getUser().getIndex() + ": " +prediction);
-            
-            // Set predicted rating
-            predRating.setRating(prediction);
+            Predictor test = new Predictor(userList, movieList, ratingList, predRatings, i, i + numberOfRatingsPerThread, startTime);
+            executorService.submit(test);
         }
-        System.out.println("Done, it took : " + ((System.currentTimeMillis() - start) / 1000) + " seconds");
+
+        executorService.shutdown();
+        while (! executorService.isTerminated()) {
+            Thread.sleep(5000);
+            long total = ((ThreadPoolExecutor) executorService).getTaskCount();
+            long done = ((ThreadPoolExecutor) executorService).getCompletedTaskCount();
+            long remaining = total - done;
+
+            long secondsSoFar = ((System.currentTimeMillis() - startTime) / 1000);
+            long expectedDuration = Math.round((secondsSoFar / (double) done) * remaining);
+            System.out.print("Running predictions " + done + "/" + total);
+            System.out.print(", so far it took " + secondsSoFar + " seconds. ");
+            System.out.println("With " + remaining + " more items to go, it will probably take another " + expectedDuration + " seconds.");
+
+        }
+
+        System.out.println("Done, it took : " + ((System.currentTimeMillis() - startTime) / 1000) + " seconds");
 
         // Return predictions
         return predRatings;

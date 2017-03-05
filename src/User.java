@@ -2,18 +2,19 @@ import java.util.HashMap;
 
 public class User {
 
-    int index;
-    int age;
-    int profession;
-    boolean male;
-    HashMap<Integer, Double> ratings;
+    private int index;
+    private int age;
+    private int profession;
+    private boolean male;
+    private HashMap<Integer, Double> ratings;
+    private double averageRating;
 
     public User(int _index, boolean _male, int _age, int _profession) {
         this.index = _index;
         this.male = _male;
         this.age = _age;
         this.profession = _profession;
-        this.ratings = new HashMap<Integer, Double>();
+        this.ratings = new HashMap<>();
     }
 
     public void putRating(Integer movie, double rating) {
@@ -40,4 +41,19 @@ public class User {
         return profession;
     }
 
+    /**
+     * Compute average rating of movie.
+     */
+    public void computeAverage() {
+        averageRating = Util.calculateAverage(ratings);
+    }
+
+    /**
+     * Get the average rating.
+     *
+     * @return Movie average rating.
+     */
+    public double getAverageRating() {
+        return averageRating;
+    }
 }

@@ -2,7 +2,7 @@
  * Created by casperboone on 05-03-17.
  */
 public class CollaborativeFilteringTestSet {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
         // Read user list
         UserList userList = new UserList();
         userList.readFile("data/users.csv");

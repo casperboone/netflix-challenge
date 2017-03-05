@@ -2,10 +2,11 @@ import java.util.HashMap;
 
 public class Movie {
 
-    int index;
-    int year;
-    String title;
-    HashMap<Integer, Double> ratings;
+    private int index;
+    private int year;
+    private String title;
+    private HashMap<Integer, Double> ratings;
+    private double averageRating = 2.5;
 
     public Movie(int _index, int _year, String _title) {
         this.index = _index;
@@ -32,6 +33,22 @@ public class Movie {
 
     public String getTitle() {
         return title;
+    }
+
+    /**
+     * Compute average rating of movie.
+     */
+    public void computeAverage() {
+        averageRating = Util.calculateAverage(ratings);
+    }
+
+    /**
+     * Get the average rating.
+     *
+     * @return Movie average rating.
+     */
+    public double getAverageRating() {
+        return averageRating;
     }
 
 }

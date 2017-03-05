@@ -8,6 +8,8 @@ public class RatingList extends ArrayList<Rating> {
 
     private static final long serialVersionUID = 1L;
 
+    private double averageRating = 2.5;
+
 
     public void readFile(String filename, UserList userList, MovieList movieList) {
         readFile(filename, userList, movieList, true, 0, Integer.MAX_VALUE);
@@ -69,7 +71,23 @@ public class RatingList extends ArrayList<Rating> {
 
     }
 
-//    public void compareRatings(RatingList other) {
-//        for ()
-//    }
+    /**
+     * Compute overall average rating (used for global bias)
+     */
+    public void computeAverage() {
+        double sum = 0.0;
+        for (Rating rating : this) {
+            sum += rating.getRating();
+        }
+        averageRating = sum / this.size();
+    }
+
+    /**
+     * Get the average rating.
+     *
+     * @return Overall average rating.
+     */
+    public double getAverageRating() {
+        return averageRating;
+    }
 }
