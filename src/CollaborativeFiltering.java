@@ -41,6 +41,8 @@ public class CollaborativeFiltering {
     public static RatingList predictRatings(UserList userList,
                                             MovieList movieList, RatingList ratingList, RatingList predRatings) {
 
+        long start = System.currentTimeMillis();
+
         // Number of users and movies
         int nU = userList.size();
         int nM = movieList.size();
@@ -51,8 +53,13 @@ public class CollaborativeFiltering {
             Rating predRating = predRatings.get(i);
 
             // Inform progress
-            if (i % 10 == 0) {
-                System.out.println("Running predictions " + (i + 1) + "/" + predRatings.size());
+            if (i % 10 == 1) {
+                long secondsSoFar = ((System.currentTimeMillis() - start) / 1000);
+                int remainingItems = predRatings.size() - i - 1;
+                long expectedDuration = Math.round((secondsSoFar / (double) i) * remainingItems);
+                System.out.print("Running predictions " + (i + 1) + "/" + predRatings.size());
+                System.out.print(", so far it took " + secondsSoFar + " seconds. ");
+                System.out.println("With " + remainingItems + " more items to go, it will probably take another " + expectedDuration + " seconds.");
             }
 
             // Hard-code size of neighborhood
@@ -106,7 +113,7 @@ public class CollaborativeFiltering {
             // Set predicted rating
             predRating.setRating(prediction);
         }
-        System.out.println("done.");
+        System.out.println("Done, it took : " + ((System.currentTimeMillis() - start) / 1000) + " seconds");
 
         // Return predictions
         return predRatings;
