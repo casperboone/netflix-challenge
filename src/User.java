@@ -1,4 +1,5 @@
 import java.util.HashMap;
+import java.util.PriorityQueue;
 
 public class User {
 
@@ -8,6 +9,7 @@ public class User {
     private boolean male;
     private HashMap<Integer, Double> ratings;
     private double averageRating;
+    private PriorityQueue<Neighbour<User>> neighbours;
 
     public User(int _index, boolean _male, int _age, int _profession) {
         this.index = _index;
@@ -55,5 +57,13 @@ public class User {
      */
     public double getAverageRating() {
         return averageRating;
+    }
+
+    public PriorityQueue<Neighbour<User>> getNeighbours() {
+        return neighbours;
+    }
+
+    public void setNeighbours(PriorityQueue<Neighbour<User>> neighbours) {
+        this.neighbours = neighbours;
     }
 }

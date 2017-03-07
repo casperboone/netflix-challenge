@@ -20,11 +20,6 @@ public class Predictor extends Thread {
     }
 
     public void run() {
-
-        // Number of users and movies
-        int nU = userList.size();
-        int nM = movieList.size();
-
         // Loop over to-be-predicted ratings
         for (int i = start; i < end; i++) {
             Rating predRating = predRatings.get(i);
@@ -33,27 +28,29 @@ public class Predictor extends Thread {
             int N = 1000;
 
             // Compute similarity with other users
-            PriorityQueue<Neighbour<User>> neighbours = new PriorityQueue<>(N);
-            for (User other : userList) {
+            if (predRating.getUser().getNeighbours() == null) {
+                PriorityQueue<Neighbour<User>> neighbours = new PriorityQueue<>(N);
+                for (User other : userList) {
 
-                // Compute similarity
-                double similarity = Util.calculateCosine(
-                    Util.subtractAverage(predRating.getUser().getRatings()),
-                    Util.subtractAverage(other.getRatings()),
-                    nM
-                );
+                    // Compute similarity
+                    double similarity = Util.calculateCosine(
+                            Util.subtractAverage(predRating.getUser().getRatings()),
+                            Util.subtractAverage(other.getRatings())
+                    );
 
-                // Make sure we only keep the top N
-                if (neighbours.size() < N) {
-                    neighbours.add(new Neighbour<>(other, similarity));
-                    continue;
+                    // Make sure we only keep the top N
+                    if (neighbours.size() < N) {
+                        neighbours.add(new Neighbour<>(other, similarity));
+                        continue;
+                    }
+
+                    // If the current size is > N, check if the first element has a lower similarity
+                    if (neighbours.peek().getSimilarity() < similarity) {
+                        neighbours.poll();
+                        neighbours.add(new Neighbour<>(other, similarity));
+                    }
                 }
-
-                // If the current size is > N, check if the first element has a lower similarity
-                if (neighbours.peek().getSimilarity() < similarity) {
-                    neighbours.poll();
-                    neighbours.add(new Neighbour<>(other, similarity));
-                }
+                predRating.getUser().setNeighbours(neighbours);
             }
 
             // Construct weighted average
@@ -62,7 +59,7 @@ public class Predictor extends Thread {
             //TODO: use weighted sum with interpolation weights (slide 48)
             double numerator = 0.0;
             double denominator = 0.0;
-            for (Neighbour<User> neighbour : neighbours) {
+            for (Neighbour<User> neighbour : predRating.getUser().getNeighbours()) {
                 Double neighbourRating = neighbour.getResource().getRatings().get(predRating.getMovie().getIndex() - 1);
                 if (neighbourRating != null) {
                     numerator += neighbour.getSimilarity() * (neighbourRating - getBaseline(ratingList, predRating.getMovie(), neighbour.getResource()));
@@ -79,15 +76,6 @@ public class Predictor extends Thread {
             }
 
 //            System.out.println(i + " " + predRating.getUser().getIndex() + ": " +prediction);
-
-//            if (i % 10 == 0 && i > 0) {
-//                long secondsSoFar = ((System.currentTimeMillis() - startTime) / 1000);
-//                int remainingItems = predRatings.size() - i - 1;
-//                long expectedDuration = Math.round((secondsSoFar / (double) i) * remainingItems);
-//                System.out.print("Running predictions " + (i + 1) + "/" + predRatings.size());
-//                System.out.print(", so far it took " + secondsSoFar + " seconds. ");
-//                System.out.println("With " + remainingItems + " more items to go, it will probably take another " + expectedDuration + " seconds.");
-//            }
 
             // Set predicted rating
             predRating.setRating(prediction);

@@ -6,7 +6,7 @@ import java.util.Map;
 
 public class Util {
 
-    public static double calculateCosine(Map<Integer, Double> userX, Map<Integer, Double> userY, int nM) {
+    public static double calculateCosine(Map<Integer, Double> userX, Map<Integer, Double> userY) {
         // Compute cosine similarity between two users
         return innerProduct(userX, userY) /  (euclideanNorm(userX) * euclideanNorm(userY));
     }

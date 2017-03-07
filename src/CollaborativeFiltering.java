@@ -46,18 +46,17 @@ public class CollaborativeFiltering {
 
     public static RatingList predictRatings(UserList userList,
                                             MovieList movieList, RatingList ratingList, RatingList predRatings) throws InterruptedException {
-        // Compute mean of all ratings
+        // Compute mean of all ratings (used for global bias)
         ratingList.computeAverage();
 
-        // Compute mean rating per movie
-        movieList.stream().forEach(Movie::computeAverage);
+        // Compute mean rating per movie (used for global bias)
+        movieList.forEach(Movie::computeAverage);
 
-        // Compute mean rating per user
-        userList.stream().forEach(User::computeAverage);
+        // Compute mean rating per user (used for global bias)
+        userList.forEach(User::computeAverage);
 
 
         long startTime = System.currentTimeMillis();
-
 
         int numberOfRatingsPerThread = 20;
         int maxThreads = 20;
@@ -67,7 +66,6 @@ public class CollaborativeFiltering {
         // Loop over to-be-predicted ratings
         System.out.println("Running predictions..");
         for (int i = 0; i < predRatings.size(); i += numberOfRatingsPerThread) {
-
             Predictor test = new Predictor(userList, movieList, ratingList, predRatings, i, i + numberOfRatingsPerThread, startTime);
             executorService.submit(test);
         }
@@ -75,21 +73,24 @@ public class CollaborativeFiltering {
         executorService.shutdown();
         while (! executorService.isTerminated()) {
             Thread.sleep(5000);
-            long total = ((ThreadPoolExecutor) executorService).getTaskCount();
-            long done = ((ThreadPoolExecutor) executorService).getCompletedTaskCount();
-            long remaining = total - done;
-
-            long secondsSoFar = ((System.currentTimeMillis() - startTime) / 1000);
-            long expectedDuration = Math.round((secondsSoFar / (double) done) * remaining);
-            System.out.print("Running predictions " + done + "/" + total);
-            System.out.print(", so far it took " + secondsSoFar + " seconds. ");
-            System.out.println("With " + remaining + " more items to go, it will probably take another " + expectedDuration + " seconds.");
-
+            giveStatusUpdate(startTime, executorService);
         }
 
         System.out.println("Done, it took : " + ((System.currentTimeMillis() - startTime) / 1000) + " seconds");
 
         // Return predictions
         return predRatings;
+    }
+
+    private static void giveStatusUpdate(long startTime, ExecutorService executorService) {
+        long total = ((ThreadPoolExecutor) executorService).getTaskCount();
+        long done = ((ThreadPoolExecutor) executorService).getCompletedTaskCount();
+        long remaining = total - done;
+
+        long secondsSoFar = ((System.currentTimeMillis() - startTime) / 1000);
+        long expectedDuration = Math.round((secondsSoFar / (double) done) * remaining);
+        System.out.print("Running predictions " + done + "/" + total);
+        System.out.print(", so far it took " + secondsSoFar + " seconds. ");
+        System.out.println("With " + remaining + " more items to go, it will probably take another " + expectedDuration + " seconds.");
     }
 }
