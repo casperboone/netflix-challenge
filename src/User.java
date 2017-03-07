@@ -8,7 +8,7 @@ public class User {
     private int profession;
     private boolean male;
     private HashMap<Integer, Double> ratings;
-    private double averageRating;
+    private double averageRating = CollaborativeFiltering.DEFAULT_RATING;
     private PriorityQueue<Neighbour<User>> neighbours;
 
     public User(int _index, boolean _male, int _age, int _profession) {

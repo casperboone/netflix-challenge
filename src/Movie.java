@@ -1,4 +1,5 @@
 import java.util.HashMap;
+import java.util.PriorityQueue;
 
 public class Movie {
 
@@ -6,7 +7,8 @@ public class Movie {
     private int year;
     private String title;
     private HashMap<Integer, Double> ratings;
-    private double averageRating = 2.5;
+    private double averageRating = CollaborativeFiltering.DEFAULT_RATING;
+    private PriorityQueue<Neighbour<Movie>> neighbours;
 
     public Movie(int _index, int _year, String _title) {
         this.index = _index;
@@ -49,6 +51,14 @@ public class Movie {
      */
     public double getAverageRating() {
         return averageRating;
+    }
+
+    public PriorityQueue<Neighbour<Movie>> getNeighbours() {
+        return neighbours;
+    }
+
+    public void setNeighbours(PriorityQueue<Neighbour<Movie>> neighbours) {
+        this.neighbours = neighbours;
     }
 
 }

@@ -14,6 +14,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 public class CollaborativeFiltering {
+    public final static double DEFAULT_RATING = 2.5;
 
     public static void main(String[] args) throws InterruptedException {
 
