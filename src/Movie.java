@@ -14,7 +14,7 @@ public class Movie {
         this.index = _index;
         this.year = _year;
         this.title = _title;
-        this.ratings = new HashMap<Integer, Double>();
+        this.ratings = new HashMap<>();
     }
 
     public void putRating(Integer user, Double rating) {

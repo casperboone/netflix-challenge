@@ -5,16 +5,13 @@
  */
 
 import java.lang.System;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.PriorityQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 public class CollaborativeFiltering {
     public final static double DEFAULT_RATING = 2.5;
+    public final static int NEIGHBOURHOOD_SIZE = 895;
 
     public static void main(String[] args) throws InterruptedException {
 
@@ -31,8 +28,12 @@ public class CollaborativeFiltering {
         ratings.readFile("data/ratings.csv", userList, movieList);
 
         // Make predictions file
+        String predictionsFile = "data/predictions.csv";
+        if (args.length >= 1) {
+            predictionsFile = args[0];
+        }
         RatingList predRatings = new RatingList();
-        predRatings.readFile(args[0], userList, movieList);
+        predRatings.readFile(predictionsFile, userList, movieList);
 
         // Add ratings to user and movie lists
         userList.addRatings(ratings);
@@ -62,22 +63,24 @@ public class CollaborativeFiltering {
         int numberOfRatingsPerThread = 20;
         int maxThreads = 20;
 
+        // Use an executor service to make sure there never run more than maxThreads threads at a single time
         ExecutorService executorService = Executors.newFixedThreadPool(maxThreads);
         
         // Loop over to-be-predicted ratings
         System.out.println("Running predictions..");
         for (int i = 0; i < predRatings.size(); i += numberOfRatingsPerThread) {
-            Predictor test = new Predictor(userList, movieList, ratingList, predRatings, i, i + numberOfRatingsPerThread, startTime);
-            executorService.submit(test);
+            // create a predictor (new thread) that computes the to be computes rating i till i + numberOfRatingsPerThread
+            executorService.submit(new Predictor(userList, movieList, ratingList, predRatings, i, i + numberOfRatingsPerThread));
         }
 
         executorService.shutdown();
         while (! executorService.isTerminated()) {
+            // Give a status update every 5 seconds
             Thread.sleep(5000);
             giveStatusUpdate(startTime, executorService);
         }
 
-        System.out.println("Done, it took : " + ((System.currentTimeMillis() - startTime) / 1000) + " seconds");
+        System.out.println("Done, it took " + ((System.currentTimeMillis() - startTime) / 1000) + " seconds");
 
         // Return predictions
         return predRatings;
