@@ -1,4 +1,5 @@
 import java.util.HashSet;
+import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Set;
 
@@ -25,21 +26,25 @@ public class Predictor extends Thread {
             Rating predRating = predRatings.get(i);
 
             // Compute similarity with other users
-            computeSimilarityIfUnknown(predRating, movieList);
+            PriorityQueue<Neighbour<Movie>> neighbours = computeSimilarityIfUnknown(predRating, movieList);
 
             // Construct weighted average and set it to the item
-            predRating.setRating(computeWeighedAverage(predRating, ratingList));
+            predRating.setRating(computeWeighedAverage(predRating, ratingList, neighbours));
         }
     }
 
-    private static void computeSimilarityIfUnknown(Rating predRating, MovieList movieList) {
-        if (predRating.getMovie().getNeighbours() != null) {
-            return;
-        }
+    private static PriorityQueue<Neighbour<Movie>> computeSimilarityIfUnknown(Rating predRating, MovieList movieList) {
+//        if (predRating.getMovie().getNeighbours() != null) {
+//            return;
+//        }
 
         PriorityQueue<Neighbour<Movie>> neighbours = new PriorityQueue<>(CollaborativeFiltering.NEIGHBOURHOOD_SIZE);
 
         for (Movie other : movieList) {
+            if (other.getRatings().get(predRating.getUser().getIndex() - 1) == null) {
+                continue;
+            }
+
             // Compute similarity
             double similarity = Util.calculateCosine(
                     Util.subtractAverage(predRating.getMovie().getRatings()),
@@ -61,7 +66,9 @@ public class Predictor extends Thread {
                 neighbours.add(new Neighbour<>(other, similarity));
             }
         }
-        predRating.getMovie().setNeighbours(neighbours);
+
+        return neighbours;
+//        predRating.getMovie().setNeighbours(neighbours);
     }
 
     /**
@@ -73,12 +80,12 @@ public class Predictor extends Thread {
      * @param ratingList
      * @return Weighed average
      */
-    private static double computeWeighedAverage(Rating predRating, RatingList ratingList) {
+    private static double computeWeighedAverage(Rating predRating, RatingList ratingList, PriorityQueue<Neighbour<Movie>> neighbours) {
         //TODO: use weighted sum with interpolation weights (slide 48)
         double numerator = 0.0;
         double denominator = 0.0;
 
-        for (Neighbour<Movie> neighbour : predRating.getMovie().getNeighbours()) {
+        for (Neighbour<Movie> neighbour : neighbours) {
             Double neighbourRating = neighbour.getResource().getRatings().get(predRating.getUser().getIndex() - 1);
 
             // if the neighbour has not rated the item, skip the neighbour
