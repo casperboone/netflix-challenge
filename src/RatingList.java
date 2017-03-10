@@ -8,7 +8,7 @@ public class RatingList extends ArrayList<Rating> {
 
     private static final long serialVersionUID = 1L;
 
-    private double averageRating = 2.5;
+    private double averageRating;
 
 
     public void readFile(String filename, UserList userList, MovieList movieList) {

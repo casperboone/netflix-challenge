@@ -1,8 +1,8 @@
 public class Rating {
 
-    User user;
-    Movie movie;
-    double rating;
+    private User user;
+    private Movie movie;
+    private double rating;
 
     public Rating(User _user, Movie _movie, int _rating) {
         this.user = _user;

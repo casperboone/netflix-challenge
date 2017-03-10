@@ -34,20 +34,7 @@ public class Neighbour<T> implements Comparable<Neighbour<T>> {
      */
     @Override
     public int compareTo(Neighbour<T> other) {
-        if (this.similarity < other.similarity) {
-            return -1;
-        }
-        if (this.similarity > other.similarity) {
-            return 1;
-        }
-        return 0;
+        return Double.compare(this.similarity, other.similarity);
     }
 
-    @Override
-    public String toString() {
-        return "Neighbour{" +
-                "resource=" + resource +
-                ", similarity=" + similarity +
-                '}';
-    }
 }

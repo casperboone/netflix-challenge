@@ -10,8 +10,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
 public class CollaborativeFiltering {
-    public final static double DEFAULT_RATING = 2.5;
     public final static int NEIGHBOURHOOD_SIZE = 25;
+    public final static int MAX_THREADS = 20;
+    public final static int RATINGS_PER_THREAD = 20;
 
     public static void main(String[] args) throws InterruptedException {
 
@@ -50,7 +51,6 @@ public class CollaborativeFiltering {
                                             MovieList movieList, RatingList ratingList, RatingList predRatings) throws InterruptedException {
         // Compute mean of all ratings (used for global bias)
         ratingList.computeAverage();
-        System.out.println(ratingList.getAverageRating());
 
         // Compute mean rating per movie (used for global bias)
         movieList.forEach(Movie::computeAverage);
@@ -58,22 +58,20 @@ public class CollaborativeFiltering {
         // Compute mean rating per user (used for global bias)
         userList.forEach(User::computeAverage);
 
-
         long startTime = System.currentTimeMillis();
 
-        int numberOfRatingsPerThread = 20;
-        int maxThreads = 20;
-
         // Use an executor service to make sure there never run more than maxThreads threads at a single time
-        ExecutorService executorService = Executors.newFixedThreadPool(maxThreads);
-        
-        // Loop over to-be-predicted ratings
+        ExecutorService executorService = Executors.newFixedThreadPool(MAX_THREADS);
+
         System.out.println("Running predictions..");
-        for (int i = 0; i < predRatings.size(); i += numberOfRatingsPerThread) {
+
+        // Loop over to-be-predicted ratings and divide them over the multiple threads
+        for (int i = 0; i < predRatings.size(); i += RATINGS_PER_THREAD) {
             // create a predictor (new thread) that computes the to be computes rating i till i + numberOfRatingsPerThread
-            executorService.submit(new Predictor(userList, movieList, ratingList, predRatings, i, i + numberOfRatingsPerThread));
+            executorService.submit(new Predictor(userList, movieList, ratingList, predRatings, i, i + RATINGS_PER_THREAD));
         }
 
+        // Stop executor service and wait till it is finished
         executorService.shutdown();
         while (! executorService.isTerminated()) {
             // Give a status update every 5 seconds
@@ -93,9 +91,8 @@ public class CollaborativeFiltering {
         long remaining = total - done;
 
         long secondsSoFar = ((System.currentTimeMillis() - startTime) / 1000);
-        long expectedDuration = Math.round((secondsSoFar / (double) done) * remaining);
         System.out.print("Running predictions " + done + "/" + total);
         System.out.print(", so far it took " + secondsSoFar + " seconds. ");
-        System.out.println("With " + remaining + " more items to go, it will probably take another " + expectedDuration + " seconds.");
+        System.out.println("Only " + remaining * RATINGS_PER_THREAD + " more items to go.");
     }
 }
