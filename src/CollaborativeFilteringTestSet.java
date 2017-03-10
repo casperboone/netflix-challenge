@@ -13,11 +13,11 @@ public class CollaborativeFilteringTestSet {
 
         // Read rating list
         RatingList ratings = new RatingList();
-        ratings.readFile("data/ratings.csv", userList, movieList, true, 100, Integer.MAX_VALUE);
+        ratings.readFile("data/ratings.csv", userList, movieList, true, 5000, Integer.MAX_VALUE);
 
         // Make predictions file
         RatingList predRatings = new RatingList();
-        predRatings.readFile("data/ratings.csv", userList, movieList, false, 0, 100);
+        predRatings.readFile("data/ratings.csv", userList, movieList, false, 2000, 5000);
 
         // Add ratings to user and movie lists
         userList.addRatings(ratings);
@@ -27,7 +27,7 @@ public class CollaborativeFilteringTestSet {
         CollaborativeFiltering.predictRatings(userList, movieList, ratings, predRatings);
 
         RatingList actualRatings = new RatingList();
-        actualRatings.readFile("data/ratings.csv", userList, movieList, true, 0, 100);
+        actualRatings.readFile("data/ratings.csv", userList, movieList, true, 2000, 5000);
 
         System.out.println("RMSE: " + Util.rmse(predRatings, actualRatings));
     }

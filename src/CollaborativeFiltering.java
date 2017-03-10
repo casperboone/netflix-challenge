@@ -11,7 +11,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 public class CollaborativeFiltering {
     public final static double DEFAULT_RATING = 2.5;
-    public final static int NEIGHBOURHOOD_SIZE = 25;
+    public final static int NEIGHBOURHOOD_SIZE = 895;
 
     public static void main(String[] args) throws InterruptedException {
 

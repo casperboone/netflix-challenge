@@ -61,5 +61,13 @@ public class Movie {
         this.neighbours = neighbours;
     }
 
+    @Override
+    public String toString() {
+        return "Movie{" +
+                "index=" + index +
+                ", year=" + year +
+                ", title='" + title + '\'' +
+                '}';
+    }
 }
 

@@ -41,9 +41,9 @@ public class Predictor extends Thread {
         PriorityQueue<Neighbour<Movie>> neighbours = new PriorityQueue<>(CollaborativeFiltering.NEIGHBOURHOOD_SIZE);
 
         for (Movie other : movieList) {
-            if (other.getRatings().get(predRating.getUser().getIndex() - 1) == null) {
-                continue;
-            }
+//            if (other.getRatings().get(predRating.getUser().getIndex() - 1) == null) {
+//                continue;
+//            }
 
             // Compute similarity
             double similarity = Util.calculateCosine(
@@ -62,7 +62,7 @@ public class Predictor extends Thread {
 
             // If the current size is > N, check if the first element has a lower similarity
             if (neighbours.peek().getSimilarity() < similarity) {
-                neighbours.poll();
+                Neighbour<Movie> test = neighbours.poll();
                 neighbours.add(new Neighbour<>(other, similarity));
             }
         }
