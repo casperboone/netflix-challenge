@@ -11,7 +11,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 public class CollaborativeFiltering {
     public final static double DEFAULT_RATING = 2.5;
-    public final static int NEIGHBOURHOOD_SIZE = 895;
+    public final static int NEIGHBOURHOOD_SIZE = 25;
 
     public static void main(String[] args) throws InterruptedException {
 
@@ -50,6 +50,7 @@ public class CollaborativeFiltering {
                                             MovieList movieList, RatingList ratingList, RatingList predRatings) throws InterruptedException {
         // Compute mean of all ratings (used for global bias)
         ratingList.computeAverage();
+        System.out.println(ratingList.getAverageRating());
 
         // Compute mean rating per movie (used for global bias)
         movieList.forEach(Movie::computeAverage);

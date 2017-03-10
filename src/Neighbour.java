@@ -42,4 +42,12 @@ public class Neighbour<T> implements Comparable<Neighbour<T>> {
         }
         return 0;
     }
+
+    @Override
+    public String toString() {
+        return "Neighbour{" +
+                "resource=" + resource +
+                ", similarity=" + similarity +
+                '}';
+    }
 }
