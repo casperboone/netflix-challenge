@@ -93,7 +93,7 @@ public class Predictor extends Thread {
 
         // If there were no neighbours we have rated i, we set the prediction to a default
         if (Double.isNaN(prediction)) {
-            return CollaborativeFiltering.DEFAULT_RATING;
+            return ratingList.getAverageRating();
         }
 
         return prediction;
