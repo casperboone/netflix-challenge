@@ -1,7 +1,8 @@
-import java.util.HashSet;
-import java.util.PriorityQueue;
-import java.util.Set;
+import java.util.*;
 
+/**
+ * This class predicts all movie rating for a given range of the predRatings list.
+ */
 public class Predictor extends Thread {
     private UserList userList;
     private MovieList movieList;
@@ -25,43 +26,73 @@ public class Predictor extends Thread {
             Rating predRating = predRatings.get(i);
 
             // Compute similarity with other users
-            computeSimilarityIfUnknown(predRating, movieList);
+            PriorityQueue<Neighbour<Movie>> neighbours = computeSimilarity(predRating, movieList);
 
             // Construct weighted average and set it to the item
-            predRating.setRating(computeWeighedAverage(predRating, ratingList));
+            predRating.setRating(computeWeighedAverage(predRating, ratingList, neighbours));
         }
     }
 
-    private static void computeSimilarityIfUnknown(Rating predRating, MovieList movieList) {
-        if (predRating.getMovie().getNeighbours() != null) {
-            return;
-        }
+    private static PriorityQueue<Neighbour<Movie>> computeSimilarity(Rating predRating, MovieList movieList) {
+        // Pre-compute and cache the distance to all other movies
+        computeSimilaritiesToOtherMoviesIfUnknown(predRating.getMovie(), movieList);
 
         PriorityQueue<Neighbour<Movie>> neighbours = new PriorityQueue<>(CollaborativeFiltering.NEIGHBOURHOOD_SIZE);
 
-        for (Movie other : movieList) {
-            // Compute similarity
-            double similarity = Util.calculateCosine(
-                    Util.subtractAverage(predRating.getMovie().getRatings()),
-                    Util.subtractAverage(other.getRatings())
-            );
-
-            // double similarity = jaccardDistance(predRating.getMovie(), other);
-            // double similarity = pearsonCorrelationCoefficient(predRating.getMovie(), other);
-
-            // Make sure we only keep the top N
-            if (neighbours.size() < CollaborativeFiltering.NEIGHBOURHOOD_SIZE) {
-                neighbours.add(new Neighbour<>(other, similarity));
+        // Loop over all other movies with precomputed similarity of the movie
+        for (Neighbour<Movie> other : predRating.getMovie().getOtherMovies().values()) {
+            // If movie does not have a rating by the user of predRating, skip it
+            if (other.getResource().getRatings().get(predRating.getUser().getIndex() - 1) == null) {
                 continue;
             }
 
-            // If the current size is > N, check if the first element has a lower similarity
-            if (neighbours.peek().getSimilarity() < similarity) {
+            // Add the first N to the priority queue
+            if (neighbours.size() < CollaborativeFiltering.NEIGHBOURHOOD_SIZE) {
+                neighbours.add(other);
+                continue;
+            }
+
+            // If the current size is > N, check if the first element has a lower similarity. If so, replace it.
+            if (neighbours.peek().getSimilarity() < other.getSimilarity()) {
                 neighbours.poll();
-                neighbours.add(new Neighbour<>(other, similarity));
+                neighbours.add(other);
             }
         }
-        predRating.getMovie().setNeighbours(neighbours);
+
+        return neighbours;
+    }
+
+    /**
+     * Compute all distance to other movies of a certain movie (if we have not done this yet). This is useful
+     * so that we can 'cache' all the similarities. After having computed them once,
+     * the program runs very fast (about 40k ratings per 5 seconds).
+     *
+     * @param movie
+     * @param movieList
+     */
+    private static void computeSimilaritiesToOtherMoviesIfUnknown(Movie movie, MovieList movieList) {
+        // If we have already computed the distance to all other movies, we can stop
+        if (movie.getOtherMovies() != null) {
+            return;
+        }
+
+        HashMap<Movie, Neighbour<Movie>> neighbours = new HashMap<>();
+
+        for (Movie other : movieList) {
+            // Compute cosine similarity to other movies
+            double similarity = Util.calculateCosine(
+                    Util.subtractAverage(movie.getRatings()),
+                    Util.subtractAverage(other.getRatings())
+            );
+
+            if (Double.isNaN(similarity)) {
+                similarity = 0.0;
+            }
+
+            neighbours.put(other, new Neighbour<>(other, similarity));
+        }
+
+        movie.setOtherMovies(neighbours);
     }
 
     /**
@@ -73,30 +104,41 @@ public class Predictor extends Thread {
      * @param ratingList
      * @return Weighed average
      */
-    private static double computeWeighedAverage(Rating predRating, RatingList ratingList) {
-        //TODO: use weighted sum with interpolation weights (slide 48)
+    private static double computeWeighedAverage(Rating predRating, RatingList ratingList, PriorityQueue<Neighbour<Movie>> neighbours) {
         double numerator = 0.0;
         double denominator = 0.0;
 
-        for (Neighbour<Movie> neighbour : predRating.getMovie().getNeighbours()) {
+        // Sum over all neighbours [see formula in javadoc]
+        for (Neighbour<Movie> neighbour : neighbours) {
             Double neighbourRating = neighbour.getResource().getRatings().get(predRating.getUser().getIndex() - 1);
 
-            // if the neighbour has not rated the item, skip the neighbour
-            if (neighbourRating != null) {
-                numerator += neighbour.getSimilarity() * (neighbourRating - getBaseline(ratingList, predRating.getUser(), neighbour.getResource()));
-                denominator += neighbour.getSimilarity();
-            }
+            // sim(x,y) * (r_yi - b_yi) [see formula in javadoc]
+            numerator += neighbour.getSimilarity() * (neighbourRating - getBaseline(ratingList, predRating.getUser(), neighbour.getResource()));
+            // sim(x,y)  [see formula in javadoc]
+            denominator += neighbour.getSimilarity();
         }
 
-        double prediction = getBaseline(ratingList, predRating.getUser(), predRating.getMovie())
-                + numerator / denominator;
-
-        // If there were no neighbours we have rated i, we set the prediction to a default
-        if (Double.isNaN(prediction)) {
+        // If the denominator is smaller than 0.01, for instance when there were no similar movies
+        if (Math.abs(denominator) < 0.001) {
             return ratingList.getAverageRating();
         }
 
-        return prediction;
+        // r_xi = b_xi + ... [see formula in javadoc]
+        return getBaseline(ratingList, predRating.getUser(), predRating.getMovie()) + numerator / denominator;
+    }
+
+    /**
+     * Compute baseline estimate: u + (avg rating movie i - u) + (avg rating user x - u).
+     *
+     * @param ratingList
+     * @param movie
+     * @param user
+     * @return Baseline estimate
+     */
+    private static double getBaseline(RatingList ratingList, User user, Movie movie) {
+        return ratingList.getAverageRating()
+                + (movie.getAverageRating() - ratingList.getAverageRating())
+                + (user.getAverageRating() - ratingList.getAverageRating());
     }
 
     /**
@@ -143,19 +185,5 @@ public class Predictor extends Thread {
 
         // users in common / union
         return usersThatLikeXAndY.size() / (movieX.getRatings().size() + movieY.getRatings().size() - usersThatLikeXAndY.size());
-    }
-
-    /**
-     * Compute baseline estimate: u + (avg rating movie i - u) + (avg rating user x - u).
-     *
-     * @param ratingList
-     * @param movie
-     * @param user
-     * @return Baseline estimate
-     */
-    private static double getBaseline(RatingList ratingList, User user, Movie movie) {
-        return ratingList.getAverageRating()
-                + (movie.getAverageRating() - ratingList.getAverageRating())
-                + (user.getAverageRating() - ratingList.getAverageRating());
     }
 }

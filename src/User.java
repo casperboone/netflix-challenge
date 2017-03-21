@@ -8,7 +8,7 @@ public class User {
     private int profession;
     private boolean male;
     private HashMap<Integer, Double> ratings;
-    private double averageRating = CollaborativeFiltering.DEFAULT_RATING;
+    private double averageRating;
     private PriorityQueue<Neighbour<User>> neighbours;
 
     public User(int _index, boolean _male, int _age, int _profession) {
@@ -59,11 +59,4 @@ public class User {
         return averageRating;
     }
 
-    public PriorityQueue<Neighbour<User>> getNeighbours() {
-        return neighbours;
-    }
-
-    public void setNeighbours(PriorityQueue<Neighbour<User>> neighbours) {
-        this.neighbours = neighbours;
-    }
 }
