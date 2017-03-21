@@ -67,7 +67,7 @@ public class CollaborativeFiltering {
         predictRatings(userList, movieList, ratings, predRatings);
 
         // Write result file
-        predRatings.writeResultsFile("submission_"+System.currentTimeMillis()+".csv");
+        predRatings.writeResultsFile("submissions/submission_"+System.currentTimeMillis()+".csv");
     }
 
     public static RatingList predictRatings(UserList userList,
