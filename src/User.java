@@ -60,6 +60,13 @@ public class User {
         return averageRating;
     }
 
+    public double getBias(double overallMean) {
+        if (Double.isNaN(averageRating)) {
+            return 0.0;
+        }
+        return averageRating - overallMean;
+    }
+
     public void normalizeRatings() {
         computeAverage();
 

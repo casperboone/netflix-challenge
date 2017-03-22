@@ -52,6 +52,13 @@ public class Movie {
         return averageRating;
     }
 
+    public double getBias(double overallMean) {
+        if (Double.isNaN(averageRating)) {
+            return 0.0;
+        }
+        return averageRating - overallMean;
+    }
+
     /**
      * Get distances (similary) from this movie to all other movies.
      */

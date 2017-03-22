@@ -36,13 +36,21 @@ public class LatentFactors {
         predictRatings(userList, movieList, ratings, predRatings);
 
         // Write result file
-        String filename = "submissions/submission_"+System.currentTimeMillis()+".csv";
+        String filename = "submissions/submission_" + System.currentTimeMillis() + ".csv";
         System.out.println(filename);
         predRatings.writeResultsFile(filename);
     }
 
     public static RatingList predictRatings(UserList userList,
                                             MovieList movieList, RatingList ratingList, RatingList predRatings) {
+        // Compute mean of all ratings (used for global bias)
+        ratingList.computeAverage();
+
+        // Compute mean rating per movie (used for global bias)
+        movieList.forEach(Movie::computeAverage);
+
+        // Compute mean rating per user (used for global bias)
+        userList.forEach(User::computeAverage);
 
         // Number of users and movies
         int nU = userList.size();
@@ -82,27 +90,40 @@ public class LatentFactors {
                 int userIndex = rating.getUser().getIndex() - 1; // i
                 int movieIndex = rating.getMovie().getIndex() - 1; // x
 
-                double error = rating.getRating() - Util.innerProduct(Q.get(userIndex), P.get(movieIndex));
+                double userBias = rating.getUser().getBias(ratingList.getAverageRating());
+                double movieBias = rating.getMovie().getBias(ratingList.getAverageRating());
+
+                double error = rating.getRating() - (
+                        Util.innerProduct(Q.get(userIndex), P.get(movieIndex))
+                                + ratingList.getAverageRating()
+                                + userBias
+                                + movieBias
+                );
 
                 for (int k = 0; k < nF; k++) {
-                    double descentP = -2 * error * Q.get(userIndex).get(k) + 2 * lambdaP * P.get(movieIndex).get(k);
+                    double descentP = -2 * error * Q.get(userIndex).get(k) + 2 * lambdaP * (P.get(movieIndex).get(k) + userBias + movieBias);
                     double pValue = P.get(movieIndex).get(k) - learningRate * descentP;
                     P.get(movieIndex).put(k, pValue);
                 }
 
                 for (int k = 0; k < nF; k++) {
-                    double descentQ = -2 * error * P.get(movieIndex).get(k) + 2 * lambdaQ * Q.get(userIndex).get(k);
+                    double descentQ = -2 * error * P.get(movieIndex).get(k) + 2 * lambdaQ * (Q.get(userIndex).get(k) + userBias + movieBias);
                     double qValue = Q.get(userIndex).get(k) - learningRate * descentQ;
                     Q.get(userIndex).put(k, qValue);
                 }
             }
-            System.out.println(i + "  " + Util.rootMeanSquaredError(userList, Q, P));
+            System.out.println(i + "  " + Util.rootMeanSquaredError(userList, movieList, userList, Q, P, ratingList.getAverageRating()));
         }
 
         // Loop over to-be-predicted ratings
         System.out.print("Running predictions..");
         for (Rating rating : predRatings) {
-            rating.setRating(Util.innerProduct(Q.get(rating.getUser().getIndex() - 1), P.get(rating.getMovie().getIndex() - 1)));
+            double a = ratingList.getAverageRating() + rating.getUser().getBias(ratingList.getAverageRating()) + rating.getMovie().getBias(ratingList.getAverageRating())
+                    + Util.innerProduct(Q.get(rating.getUser().getIndex() - 1), P.get(rating.getMovie().getIndex() - 1));
+            if (Double.isNaN(a)) {
+                System.out.println("stuk");
+            }
+            rating.setRating(a);
         }
         System.out.print("done.");
 

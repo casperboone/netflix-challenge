@@ -85,15 +85,15 @@ public class Util {
     }
 
 
-    public static double rootMeanSquaredError(ArrayList<User> Ru,
-                                              Map<Integer, Map<Integer, Double>> Q, Map<Integer, Map<Integer, Double>> P) {
+    public static double rootMeanSquaredError(ArrayList<User> Ru, MovieList movieList, UserList userList,
+                                              Map<Integer, Map<Integer, Double>> Q, Map<Integer, Map<Integer, Double>> P, double overallMean) {
         // Compute the square root of the mean of squared errors
         double norm = 0.0;
         double rmse = 0.0;
         for (int u = 0; u < Ru.size(); u++) {
             for (int m : Ru.get(u).getRatings().keySet()) {
                 // Compute squared difference between true and predicted rating
-                rmse += Math.pow(Ru.get(u).getRatings().get(m) - innerProduct(Q.get(u), P.get(m)), 2);
+                rmse += Math.pow(Ru.get(u).getRatings().get(m) - (innerProduct(Q.get(u), P.get(m)) + overallMean + movieList.get(m).getBias(overallMean) + userList.get(u).getBias(overallMean)), 2);
                 norm += 1;
             }
         }
