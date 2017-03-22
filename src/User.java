@@ -1,4 +1,5 @@
 import java.util.HashMap;
+import java.util.Map;
 import java.util.PriorityQueue;
 
 public class User {
@@ -8,8 +9,8 @@ public class User {
     private int profession;
     private boolean male;
     private HashMap<Integer, Double> ratings;
+    private HashMap<Integer, Double> normalizedRatings;
     private double averageRating;
-    private PriorityQueue<Neighbour<User>> neighbours;
 
     public User(int _index, boolean _male, int _age, int _profession) {
         this.index = _index;
@@ -59,4 +60,17 @@ public class User {
         return averageRating;
     }
 
+    public void normalizeRatings() {
+        computeAverage();
+
+        normalizedRatings = new HashMap<>();
+
+        for (Map.Entry<Integer, Double> movieRating : ratings.entrySet()) {
+            normalizedRatings.put(movieRating.getKey(), movieRating.getValue() - averageRating);
+        }
+    }
+
+    public HashMap<Integer, Double> getNormalizedRatings() {
+        return normalizedRatings;
+    }
 }

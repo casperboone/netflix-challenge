@@ -1,14 +1,11 @@
 import java.lang.Math;
-import java.util.HashMap;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 
 public class Util {
 
     public static double calculateCosine(Map<Integer, Double> userX, Map<Integer, Double> userY) {
         // Compute cosine similarity between two users
-        return innerProduct(userX, userY) /  (euclideanNorm(userX) * euclideanNorm(userY));
+        return innerProduct(userX, userY) / (euclideanNorm(userX) * euclideanNorm(userY));
     }
 
     public static double calculateAverage(Map<Integer, Double> a) {
@@ -56,7 +53,7 @@ public class Util {
 
         for (int i = 0; i < predictions.size(); i++) {
             sum += Math.pow(predictions.get(i).getRating()
-                - actualRatings.get(i).getRating(), 2);
+                    - actualRatings.get(i).getRating(), 2);
         }
 
         return Math.sqrt((1.0 / predictions.size()) * sum);
@@ -65,4 +62,59 @@ public class Util {
     public static Map<Integer, Double> subtractAverage(Map<Integer, Double> a) {
         return subtractScalarVector(calculateAverage(a), new HashMap<>(a));
     }
+
+    // LATENT FACTORS UTIL:
+
+
+    public static Map<Integer, Map<Integer, Double>> initializeLatentFactor(int nK, int nF) {
+        // Initialize factors with randomly generated numbers
+        Map<Integer, Map<Integer, Double>> F = new HashMap<>();
+
+        // Random number generator (uniform)
+        Random randomInteger = new Random();
+
+        // Initialize a vector and add to map
+        for (int k = 0; k < nK; k++) {
+            Map<Integer, Double> A = new HashMap<Integer, Double>();
+            for (int f = 0; f < nF; f++) {
+                A.put(f, randomInteger.nextDouble() - 0.5);
+            }
+            F.put(k, A);
+        }
+        return F;
+    }
+
+
+    public static double rootMeanSquaredError(ArrayList<User> Ru,
+                                              Map<Integer, Map<Integer, Double>> Q, Map<Integer, Map<Integer, Double>> P) {
+        // Compute the square root of the mean of squared errors
+        double norm = 0.0;
+        double rmse = 0.0;
+        for (int u = 0; u < Ru.size(); u++) {
+            for (int m : Ru.get(u).getRatings().keySet()) {
+                // Compute squared difference between true and predicted rating
+                rmse += Math.pow(Ru.get(u).getRatings().get(m) - innerProduct(Q.get(u), P.get(m)), 2);
+                norm += 1;
+            }
+        }
+        return Math.sqrt(rmse / norm);
+    }
+
+//    public static double updateQuf(ArrayList<User> Ru, Map<Integer, Map<Integer, Double>> Q,
+//                                   Map<Integer, Map<Integer, Double>> P, int u, int f, int nF, double lambdaQ) {
+//        // Compute update in Q for user u and factor f
+//
+////		...CODE HERE...
+//
+//    }
+//
+//    public static double updatePmf(ArrayList<Movie> Rm, Map<Integer, Map<Integer, Double>> Q,
+//                                   Map<Integer, Map<Integer, Double>> P, int m, int f, int nF, double lambdaP) {
+//        // Compute update in P for movie m and factor f
+//
+////		...CODE HERE...
+//
+//    }
+
+
 }
