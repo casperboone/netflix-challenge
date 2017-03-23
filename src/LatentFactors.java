@@ -64,21 +64,15 @@ public class LatentFactors {
         System.out.println(userList.get(0).getNormalizedRatings());
 
         // Number of factors
-        int nF = 20;
+        int nF = 12; // 0.88057,
 
         // Regularization parameters
         double lambdaQ = 0.1;
         double lambdaP = 0.1;
 
         // Optimization parameters
-        double learningRate = 0.01;
-
-        double xTolerance = 0.0001;
-        int maxIterations = 100;
-        double RMSE_ = Double.POSITIVE_INFINITY;
-
-        // Initialize random number generator
-        Random rng = new Random();
+        double learningRate = 0.1;
+        int maxIterations = 50;
 
         // Initialize factors
         Map<Integer, Map<Integer, Double>> Q = Util.initializeLatentFactor(nU, nF); // users
@@ -101,14 +95,20 @@ public class LatentFactors {
                 );
 
                 for (int k = 0; k < nF; k++) {
-                    double descentP = -2 * error * Q.get(userIndex).get(k) + 2 * lambdaP * (P.get(movieIndex).get(k) + userBias + movieBias);
+                    double descentP = error * Q.get(userIndex).get(k) + lambdaP * (P.get(movieIndex).get(k) + userBias + movieBias);
                     double pValue = P.get(movieIndex).get(k) - learningRate * descentP;
+                    if (Double.isNaN(pValue) || Double.isInfinite(pValue)) {
+                        System.out.println("stuk-p");
+                    }
                     P.get(movieIndex).put(k, pValue);
                 }
 
                 for (int k = 0; k < nF; k++) {
-                    double descentQ = -2 * error * P.get(movieIndex).get(k) + 2 * lambdaQ * (Q.get(userIndex).get(k) + userBias + movieBias);
+                    double descentQ = error * P.get(movieIndex).get(k) + lambdaQ * (Q.get(userIndex).get(k) + userBias + movieBias);
                     double qValue = Q.get(userIndex).get(k) - learningRate * descentQ;
+                    if (Double.isNaN(qValue) || Double.isInfinite(qValue)/*|| Math.abs(qValue) > 1*/) {
+                        System.out.println("stuk-q");
+                    }
                     Q.get(userIndex).put(k, qValue);
                 }
             }
@@ -129,5 +129,15 @@ public class LatentFactors {
 
         // Return predictions
         return predRatings;
+    }
+
+    private double fixRating(double rating) {
+        if (rating > 5) {
+            return 5;
+        }
+        if (rating < 1) {
+            return 1;
+        }
+        return rating;
     }
 }
