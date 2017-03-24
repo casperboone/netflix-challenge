@@ -5,6 +5,7 @@
  */
 
 import java.lang.System;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
@@ -57,14 +58,14 @@ public class LatentFactors {
         int nM = movieList.size();
 
         // Normalize ratings for every user separately
-        userList.get(0).computeAverage();
-        System.out.println(userList.get(0).getAverageRating());
-        System.out.println(userList.get(0).getRatings());
-        userList.forEach(User::normalizeRatings); //maybe also for movies, see page 334
-        System.out.println(userList.get(0).getNormalizedRatings());
+//        userList.get(0).computeAverage();
+//        System.out.println(userList.get(0).getAverageRating());
+//        System.out.println(userList.get(0).getRatings());
+//        userList.forEach(User::normalizeRatings); //maybe also for movies, see page 334
+//        System.out.println(userList.get(0).getNormalizedRatings());
 
         // Number of factors
-        int nF = 12; // 0.88057,
+        int nF = 18; // 0.88057,
 
         // Regularization parameters
         double lambdaQ = 0.15;
@@ -73,10 +74,10 @@ public class LatentFactors {
         double lambdaMovieBias = 0.05;
 
         // Optimization parameters
-        double learningRate = 0.02;
+        double learningRate = 0.01;
 
         double xTolerance = 0.0001;
-        int maxIterations = 70;
+        int maxIterations = 80;
         double RMSE_ = Double.POSITIVE_INFINITY;
 
         // Initialize random number generator
@@ -105,16 +106,17 @@ public class LatentFactors {
 
                 double effects = lambdaMovieBias * movieBias + lambdaUserBias * userBias;
 
-                for (int k = 0; k < nF; k++) {
-                    double descentP = -2 * error * Q.get(userIndex).get(k) + 2 * (lambdaP * P.get(movieIndex).get(k) + effects);
-                    double pValue = P.get(movieIndex).get(k) - learningRate * descentP;
-                    P.get(movieIndex).put(k, pValue);
-                }
+                Map<Integer, Double> qTemp = new HashMap<>(Q.get(userIndex));
 
                 for (int k = 0; k < nF; k++) {
-                    double descentQ = -2 * error * P.get(movieIndex).get(k) + 2 * (lambdaQ * Q.get(userIndex).get(k) + effects);
-                    double qValue = Q.get(userIndex).get(k) - learningRate * descentQ;
+                    double descentQ = error * P.get(movieIndex).get(k) - lambdaQ * Q.get(userIndex).get(k) - effects;
+                    double qValue = Q.get(userIndex).get(k) + learningRate * descentQ;
                     Q.get(userIndex).put(k, qValue);
+                }
+                for (int k = 0; k < nF; k++) {
+                    double descentP = error * qTemp.get(k) - lambdaP * P.get(movieIndex).get(k) - effects;
+                    double pValue = P.get(movieIndex).get(k) + learningRate * descentP;
+                    P.get(movieIndex).put(k, pValue);
                 }
             }
 
