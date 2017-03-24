@@ -67,18 +67,27 @@ public class LatentFactors {
         int nF = 12; // 0.88057,
 
         // Regularization parameters
-        double lambdaQ = 0.1;
-        double lambdaP = 0.1;
+        double lambdaQ = 0.15;
+        double lambdaP = 0.15;
+        double lambdaUserBias = 0.05;
+        double lambdaMovieBias = 0.05;
 
         // Optimization parameters
-        double learningRate = 0.1;
-        int maxIterations = 50;
+        double learningRate = 0.02;
+
+        double xTolerance = 0.0001;
+        int maxIterations = 70;
+        double RMSE_ = Double.POSITIVE_INFINITY;
+
+        // Initialize random number generator
+        Random rng = new Random();
 
         // Initialize factors
         Map<Integer, Map<Integer, Double>> Q = Util.initializeLatentFactor(nU, nF); // users
         Map<Integer, Map<Integer, Double>> P = Util.initializeLatentFactor(nM, nF); // movies
 
         // Perform optimization
+        double previousRMSE = Double.POSITIVE_INFINITY;
         for (int i = 0; i < maxIterations; i++) {
             for (Rating rating : ratingList) {
                 int userIndex = rating.getUser().getIndex() - 1; // i
@@ -94,25 +103,27 @@ public class LatentFactors {
                                 + movieBias
                 );
 
+                double effects = lambdaMovieBias * movieBias + lambdaUserBias * userBias;
+
                 for (int k = 0; k < nF; k++) {
-                    double descentP = error * Q.get(userIndex).get(k) + lambdaP * (P.get(movieIndex).get(k) + userBias + movieBias);
+                    double descentP = -2 * error * Q.get(userIndex).get(k) + 2 * (lambdaP * P.get(movieIndex).get(k) + effects);
                     double pValue = P.get(movieIndex).get(k) - learningRate * descentP;
-                    if (Double.isNaN(pValue) || Double.isInfinite(pValue)) {
-                        System.out.println("stuk-p");
-                    }
                     P.get(movieIndex).put(k, pValue);
                 }
 
                 for (int k = 0; k < nF; k++) {
-                    double descentQ = error * P.get(movieIndex).get(k) + lambdaQ * (Q.get(userIndex).get(k) + userBias + movieBias);
+                    double descentQ = -2 * error * P.get(movieIndex).get(k) + 2 * (lambdaQ * Q.get(userIndex).get(k) + effects);
                     double qValue = Q.get(userIndex).get(k) - learningRate * descentQ;
-                    if (Double.isNaN(qValue) || Double.isInfinite(qValue)/*|| Math.abs(qValue) > 1*/) {
-                        System.out.println("stuk-q");
-                    }
                     Q.get(userIndex).put(k, qValue);
                 }
             }
-            System.out.println(i + "  " + Util.rootMeanSquaredError(userList, movieList, userList, Q, P, ratingList.getAverageRating()));
+
+            double RMSE = Util.rootMeanSquaredError(userList, movieList, userList, Q, P, ratingList.getAverageRating());
+            if (Math.abs(previousRMSE-RMSE) <= xTolerance) {
+                break;
+            }
+            System.out.println(i + "  " + RMSE);
+            previousRMSE = RMSE;
         }
 
         // Loop over to-be-predicted ratings
@@ -123,7 +134,7 @@ public class LatentFactors {
             if (Double.isNaN(a)) {
                 System.out.println("stuk");
             }
-            rating.setRating(a);
+            rating.setRating(fixRating(a));
         }
         System.out.print("done.");
 
@@ -131,7 +142,7 @@ public class LatentFactors {
         return predRatings;
     }
 
-    private double fixRating(double rating) {
+    private static double fixRating(double rating) {
         if (rating > 5) {
             return 5;
         }
