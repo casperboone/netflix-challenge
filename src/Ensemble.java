@@ -5,6 +5,33 @@ import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Map;
 
+// Deliverable 2 (also available in README file)
+//
+// Final (Kaggle) Score: 0.83711
+// Rank: 4
+// Kaggle name: Casper Boone
+//
+// New/changed classes for this submission
+// * Ensemble
+// * EnsembleSource
+// * LatentFactors
+// * LatentFactorsCrossValidation
+// * LatentFactorsTestSet
+// * LatentFactorTraining
+// * Matrix
+// * Movie (changed)
+// * User (changed)
+// * Util (changed)
+//
+// Most important features (not a complete list):
+// * Regularization
+// * Global/local biases
+// * Cross validation techniques
+// * Number of latent factors exploration, in LatentFactorTraining (tested from 1 to 29, outcome 9 or 23 are best, dependent on other parameters)
+// * Ensemble methods
+//
+// The working of all code is explained either in JavaDoc or in in-code comments.
+
 /**
  * Executes ensemble actions.
  */

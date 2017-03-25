@@ -9,10 +9,10 @@ public class Movie {
     private double averageRating;
     private HashMap<Movie, Neighbour<Movie>> otherMovies;
 
-    public Movie(int _index, int _year, String _title) {
-        this.index = _index;
-        this.year = _year;
-        this.title = _title;
+    public Movie(int index, int year, String title) {
+        this.index = index;
+        this.year = year;
+        this.title = title;
         this.ratings = new HashMap<>();
     }
 
@@ -52,6 +52,9 @@ public class Movie {
         return averageRating;
     }
 
+    /**
+     * Compute user bias, the user average rating - the overall average rating.
+     */
     public double getBias(double overallMean) {
         if (Double.isNaN(averageRating)) {
             return 0.0;

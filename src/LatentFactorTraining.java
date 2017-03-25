@@ -10,6 +10,7 @@ import java.util.List;
 public class LatentFactorTraining {
     public static void main(String[] args) throws InterruptedException {
         // Sets of possible values for parameters to limit the total number
+        // Other parameter types can be added / removed when needed
         int[] factors = {1, 3, 5, 7, 9, 11, 13, 15, 17, 19, 20, 21, 23, 25, 27, 29};
         double[] lambdas = {0.025, 0.05, 0.075, 0.10};
 

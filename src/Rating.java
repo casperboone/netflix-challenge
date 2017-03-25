@@ -4,18 +4,17 @@ public class Rating {
     private Movie movie;
     private double rating;
 
-    public Rating(User _user, Movie _movie, int _rating) {
-        this.user = _user;
-        this.movie = _movie;
-        this.rating = (double) _rating;
+    public Rating(User user, Movie movie, int rating) {
+        this.user = user;
+        this.movie = movie;
+        this.rating = (double) rating;
     }
 
-    public Rating(User _user, Movie _movie, double _rating) {
-        this.user = _user;
-        this.movie = _movie;
-        this.rating = _rating;
+    public Rating(User user, Movie movie, double rating) {
+        this.user = user;
+        this.movie = movie;
+        this.rating = rating;
     }
-
 
     public User getUser() {
         return user;

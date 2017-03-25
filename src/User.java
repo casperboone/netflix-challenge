@@ -12,11 +12,11 @@ public class User {
     private HashMap<Integer, Double> normalizedRatings;
     private double averageRating;
 
-    public User(int _index, boolean _male, int _age, int _profession) {
-        this.index = _index;
-        this.male = _male;
-        this.age = _age;
-        this.profession = _profession;
+    public User(int index, boolean male, int age, int profession) {
+        this.index = index;
+        this.male = male;
+        this.age = age;
+        this.profession = profession;
         this.ratings = new HashMap<>();
     }
 
@@ -60,6 +60,9 @@ public class User {
         return averageRating;
     }
 
+    /**
+     * Compute user bias, the user average rating - the overall average rating.
+     */
     public double getBias(double overallMean) {
         if (Double.isNaN(averageRating)) {
             return 0.0;
@@ -67,6 +70,9 @@ public class User {
         return averageRating - overallMean;
     }
 
+    /**
+     * Normalize ratings (subtract user average).
+     */
     public void normalizeRatings() {
         computeAverage();
 
@@ -77,6 +83,9 @@ public class User {
         }
     }
 
+    /**
+     * Get (already) normalized ratings.
+     */
     public HashMap<Integer, Double> getNormalizedRatings() {
         return normalizedRatings;
     }
