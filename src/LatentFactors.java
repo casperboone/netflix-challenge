@@ -5,14 +5,39 @@
  */
 
 import java.lang.System;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
 public class LatentFactors {
 
-    public static void main(String[] args) {
+    // Number of factors
+    static int nF = 9;
 
+    // Regularization parameters
+    static double lambdaP = 0.05;
+    static double lambdaQ = 0.05;
+
+    // Learning rate
+    static double learningRate = 0.02;
+
+    // Tolerance value. If difference between the average of the last two RMSEs of the
+    // training set and the current RMSE, is smaller than this value, we stop.
+    static double xTolerance = 0.0001;
+
+    // Maximum number of iterations
+    static int maxIterations = 100;
+
+    // Validation set. Used to display validation RMSEs while running the algorithms.
+    // These sets are set in LatentFactorsCrossValidation.
+    static RatingList validationSetKnown = null;
+    static RatingList validationSetUnknown = null;
+
+    // A list with the validation RMSE per iteration. Used to trace back the performance.
+    static List<Double> validationStatistics = new ArrayList<>();
+
+    /**
+     * Entry point of LatentFactors.
+     */
+    public static void main(String[] args) {
         // Read user list
         UserList userList = new UserList();
         userList.readFile("data/users.csv");
@@ -42,6 +67,9 @@ public class LatentFactors {
         predRatings.writeResultsFile(filename);
     }
 
+    /**
+     * Predict ratings using latent factors.
+     */
     public static RatingList predictRatings(UserList userList,
                                             MovieList movieList, RatingList ratingList, RatingList predRatings) {
         // Compute mean of all ratings (used for global bias)
@@ -57,100 +85,134 @@ public class LatentFactors {
         int nU = userList.size();
         int nM = movieList.size();
 
-        // Normalize ratings for every user separately
-//        userList.get(0).computeAverage();
-//        System.out.println(userList.get(0).getAverageRating());
-//        System.out.println(userList.get(0).getRatings());
-//        userList.forEach(User::normalizeRatings); //maybe also for movies, see page 334
-//        System.out.println(userList.get(0).getNormalizedRatings());
+        // We don't explicitly normalize here. The way the algorithm (specifically
+        // the error function)is constructed already handles this.
 
-        // Number of factors
-        int nF = 18; // 0.88057,
+        System.out.println("Starting run with " + nF + " factors and lambda " + lambdaP);
 
-        // Regularization parameters
-        double lambdaQ = 0.15;
-        double lambdaP = 0.15;
-        double lambdaUserBias = 0.05;
-        double lambdaMovieBias = 0.05;
-
-        // Optimization parameters
-        double learningRate = 0.01;
-
-        double xTolerance = 0.0001;
-        int maxIterations = 80;
-        double RMSE_ = Double.POSITIVE_INFINITY;
-
-        // Initialize random number generator
-        Random rng = new Random();
+        // Track start time to determine run time
+        long start = System.currentTimeMillis();
 
         // Initialize factors
-        Map<Integer, Map<Integer, Double>> Q = Util.initializeLatentFactor(nU, nF); // users
-        Map<Integer, Map<Integer, Double>> P = Util.initializeLatentFactor(nM, nF); // movies
+        Matrix P = Util.initializeLatentFactor(nM, nF); // movies
+        Matrix Q = Util.initializeLatentFactor(nU, nF); // users
 
-        // Perform optimization
-        double previousRMSE = Double.POSITIVE_INFINITY;
+        // P and Q of previous iterations. Used during manual interactive
+        // training to go back to a previous state.
+        List<Matrix> oldP = new ArrayList<>();
+        List<Matrix> oldQ = new ArrayList<>();
+
+        // Keep track of the last two RMSE training set scores
+        double[] previousRMSE = {Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY};
+
+        // Perform optimization over at most maxIterations
         for (int i = 0; i < maxIterations; i++) {
+            // Add current P and Q to the history lists.
+            oldP.add(P.duplicate());
+            oldQ.add(Q.duplicate());
+
+            // Update P and Q for every rating
             for (Rating rating : ratingList) {
-                int userIndex = rating.getUser().getIndex() - 1; // i
-                int movieIndex = rating.getMovie().getIndex() - 1; // x
+                int userIndex = rating.getUser().getIndex() - 1;
+                int movieIndex = rating.getMovie().getIndex() - 1;
 
-                double userBias = rating.getUser().getBias(ratingList.getAverageRating());
-                double movieBias = rating.getMovie().getBias(ratingList.getAverageRating());
+                // error = actual rating - predicted rating
+                //       = actual rating - ( dot(P[movie], Q[user]) + mean + user bias + movie bias )
+                double error = rating.getRating() - predictRating(ratingList.getAverageRating(), rating, P, Q);
 
-                double error = rating.getRating() - (
-                        Util.innerProduct(Q.get(userIndex), P.get(movieIndex))
-                                + ratingList.getAverageRating()
-                                + userBias
-                                + movieBias
-                );
-
-                double effects = lambdaMovieBias * movieBias + lambdaUserBias * userBias;
-
+                // Temporarily save the current values of Q for this user, so we have
+                // the correct values when we want to start updating P (the Q value
+                // will then already have been changed).
                 Map<Integer, Double> qTemp = new HashMap<>(Q.get(userIndex));
 
+                // Update value in Q for the current user, for each factor.
+                // New value for Q[user][factor] = (old Q[user][factor])
+                //      + learningRate * (error * P[movie][factor] - lambda * (old Q[user][factor]))
                 for (int k = 0; k < nF; k++) {
-                    double descentQ = error * P.get(movieIndex).get(k) - lambdaQ * Q.get(userIndex).get(k) - effects;
+                    double descentQ = error * P.get(movieIndex).get(k) - lambdaQ * Q.get(userIndex).get(k);
                     double qValue = Q.get(userIndex).get(k) + learningRate * descentQ;
                     Q.get(userIndex).put(k, qValue);
                 }
+
+                // Update value in P for the current movie, for each factor.
+                // New value for P[movie][factor] = (old P[movie][factor])
+                //      + learningRate * (error * Q[user][factor] - lambda * (old P[movie][factor]))
                 for (int k = 0; k < nF; k++) {
-                    double descentP = error * qTemp.get(k) - lambdaP * P.get(movieIndex).get(k) - effects;
+                    double descentP = error * qTemp.get(k) - lambdaP * P.get(movieIndex).get(k);
                     double pValue = P.get(movieIndex).get(k) + learningRate * descentP;
                     P.get(movieIndex).put(k, pValue);
                 }
             }
 
-            double RMSE = Util.rootMeanSquaredError(userList, movieList, userList, Q, P, ratingList.getAverageRating());
-            if (Math.abs(previousRMSE-RMSE) <= xTolerance) {
+            // Compute RMSE of training set
+            double RMSE = Util.rmseKnownRatings(ratingList, P, Q);
+            // If difference between the average of the last two RMSEs of the training set
+            // and the current RMSE, is smaller than this value, we stop training.
+            if (Math.abs(((previousRMSE[0] + previousRMSE[1]) / 2) - RMSE) <= xTolerance) {
                 break;
             }
+            // Keep track of last two RMSE scores.
+            previousRMSE[0] = previousRMSE[1];
+            previousRMSE[1] = RMSE;
+
+            // Output current iteration and RMSE score
             System.out.println(i + "  " + RMSE);
-            previousRMSE = RMSE;
+
+            // Compute and output RMSE of validation set, if available
+            double validationRMSE = computeValidationSetRMSE(ratingList, Q, P);
+            System.out.println("Validation set RMSE: " + computeValidationSetRMSE(ratingList, Q, P));
+            validationStatistics.add(validationRMSE);
         }
 
-        // Loop over to-be-predicted ratings
+        // Loop over to-be-predicted ratings to predict them
         System.out.print("Running predictions..");
         for (Rating rating : predRatings) {
-            double a = ratingList.getAverageRating() + rating.getUser().getBias(ratingList.getAverageRating()) + rating.getMovie().getBias(ratingList.getAverageRating())
-                    + Util.innerProduct(Q.get(rating.getUser().getIndex() - 1), P.get(rating.getMovie().getIndex() - 1));
-            if (Double.isNaN(a)) {
-                System.out.println("stuk");
-            }
-            rating.setRating(fixRating(a));
+            // Set to be predicted rating to dot(P[movie], Q[user]) + mean + user bias + movie bias
+            rating.setRating(predictRating(ratingList.getAverageRating(), rating, P, Q));
         }
-        System.out.print("done.");
+
+        // Output run time
+        System.out.println("done. It took " + 0.001 * (System.currentTimeMillis() - start));
 
         // Return predictions
         return predRatings;
     }
 
-    private static double fixRating(double rating) {
+    /**
+     * Predict the current rating of a certain movie/user pair with the following formula:
+     * rating = dot(P[movie], Q[user]) + mean + user bias + movie bias
+     *
+     * We cap the rating if it is below 1 and above 5 to its boundary.
+     */
+    public static double predictRating(double mean, Rating ratingDetails, Matrix P, Matrix Q) {
+        double rating = mean + ratingDetails.getUser().getBias(mean) + ratingDetails.getMovie().getBias(mean)
+                + Util.innerProduct(Q.get(ratingDetails.getUser().getIndex() - 1), P.get(ratingDetails.getMovie().getIndex() - 1));
+
         if (rating > 5) {
             return 5;
         }
         if (rating < 1) {
             return 1;
         }
+
         return rating;
     }
+
+    /**
+     * Compute the RMSE of the validation set (if we have a validation set).
+     */
+    private static double computeValidationSetRMSE(RatingList ratingList, Matrix Q, Matrix P) {
+        if (validationSetKnown == null || validationSetUnknown == null) {
+            return -1;
+        }
+
+        // Predict the ratings for all items in the validation set.
+        for (Rating rating : validationSetUnknown) {
+            rating.setRating(predictRating(ratingList.getAverageRating(), rating, P, Q));
+        }
+
+        return Util.rmse(validationSetUnknown, validationSetKnown);
+    }
+
 }
+
