@@ -11,11 +11,11 @@ import java.util.*;
 public class LatentFactors {
 
     // Number of factors
-    static int nF = 9;
+    static int nF = 23;
 
     // Regularization parameters
-    static double lambdaP = 0.04;
-    static double lambdaQ = 0.04;
+    static double lambdaP = 0.075;
+    static double lambdaQ = 0.075;
 
     // Learning rate
     static double learningRate = 0.02;

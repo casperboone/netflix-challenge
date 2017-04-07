@@ -35,7 +35,7 @@ public class LatentFactorsFromFile {
 
         List<Matrix> pqFile = null;
         try (
-                InputStream file = new FileInputStream("pq/gender_9f_04lbd_85535/final_pq.mat");
+                InputStream file = new FileInputStream("pq/temporal_23f_075lbd_85643/final_pq.mat");
                 InputStream buffer = new BufferedInputStream(file);
                 ObjectInput input = new ObjectInputStream(buffer)
         ) {
@@ -57,7 +57,15 @@ public class LatentFactorsFromFile {
             rating.setRating(Util.lf.predictRating(ratings.getAverageRating(), rating, P, Q));
         }
 
-        String filename = "submissions/submission_" + System.currentTimeMillis() + ".csv";
+//        new EnsembleSource("stacking/age_9f_04lbd_85893.csv", 0.0),
+//                new EnsembleSource("stacking/age_23f_075lbd_85937.csv", 0.0),
+//                new EnsembleSource("stacking/standard_9f_04lbd_85562.csv", 0.0),
+//                new EnsembleSource("stacking/standard_23f_075lbd_86019.csv", 0.0),
+//                new EnsembleSource("stacking/temporal_23f_075lbd_85643.csv", 0.0),
+
+//        String filename = "stacking/temporal_23f_075lbd_85643.csv";
+        String filename = "submissions/temporal_23f_075lbd_85643.csv";
+//        String filename = "submissions/submission_" + System.currentTimeMillis() + ".csv";
         System.out.println(filename);
         predRatings.writeResultsFile(filename);
     }

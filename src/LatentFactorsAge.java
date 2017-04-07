@@ -1,7 +1,7 @@
 public class LatentFactorsAge extends LatentFactors {
     static double lambdaAge = 0.25;
 
-    // (2 * (max - min)) / 3
+    // (1 * (max - min)) / 3
     static double ageDifference = (1 * (56 - 18)) / 3;
 
     @Override

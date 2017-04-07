@@ -5,33 +5,6 @@ import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Map;
 
-// Deliverable 2 (also available in README file)
-//
-// Final (Kaggle) Score: 0.83711
-// Rank: 4
-// Kaggle name: Casper Boone
-//
-// New/changed classes for this submission
-// * Ensemble
-// * EnsembleSource
-// * LatentFactors
-// * LatentFactorsCrossValidation
-// * LatentFactorsTestSet
-// * LatentFactorTraining
-// * Matrix
-// * Movie (changed)
-// * User (changed)
-// * Util (changed)
-//
-// Most important features (not a complete list):
-// * Regularization
-// * Global/local biases
-// * Cross validation techniques
-// * Number of latent factors exploration, in LatentFactorTraining (tested from 1 to 29, outcome 9 or 23 are best, dependent on other parameters)
-// * Ensemble methods
-//
-// The working of all code is explained either in JavaDoc or in in-code comments.
-
 /**
  * Executes ensemble actions.
  */
@@ -43,9 +16,26 @@ public class Ensemble {
     private EnsembleSource[] ensembleSources = {
 //            new EnsembleSource("submissions/submission_1490457887340.csv", .365), // LF 9 - 0.05 lambda - 0.02 LR
 //            new EnsembleSource("submissions/submission_1491420825112.csv", .34), // LF - temporal: 9 - 0.04 lambda - 0.02 / 0.002 LR
-            new EnsembleSource("submissions/submission_1491425905643.csv", .36), // LF - gender: 9 - 0.04 lambda - 0.02 / 0.002 LR
+////           new EnsembleSource("submissions/submission_1491425905643.csv", .36), // LF - gender: 9 - 0.04 lambda - 0.02 / 0.002 LR
             // new EnsembleSource("submissions/submission_1490453791923.csv", .125), // LF 23 - 0.075 lambda - 0.02 LR
-            new EnsembleSource("submissions/submission_1489179032660.csv", .64) // CF
+////            new EnsembleSource("submissions/submission_1489179032660.csv", .64) // CF
+
+
+            new EnsembleSource("submissions/submission_1491577351210.csv", 0.25265622258547543), // gender_23f_04lbd_85658
+            new EnsembleSource("submissions/submission_1491577293903.csv", 0.2160796452848671), // temporal_9f_04lbd_85819
+            new EnsembleSource("submissions/submission_1491425905643.csv", 0.03706982596208227), // LF - gender: 9 - 0.04 lambda - 0.02 / 0.002 LR
+
+
+//            new EnsembleSource("submissions/age_9f_04lbd_85893.csv", 0.11882958585089694),
+//            new EnsembleSource("submissions/age_23f_075lbd_85937.csv", 0.07644448269935332),
+//            new EnsembleSource("submissions/standard_9f_04lbd_85562.csv", 0.12136516103896347),
+//            new EnsembleSource("submissions/standard_23f_075lbd_86019.csv", 0.12684913076295615),
+//            new EnsembleSource("submissions/temporal_23f_075lbd_85643.csv", 0.21201871037134407),
+
+            new EnsembleSource("submissions/submission_1489179032660.csv", 0.16468312670116678), // CF
+            new EnsembleSource("submissions/submission_1489179032660.csv", 0.1647489884546739), // CF
+            new EnsembleSource("submissions/submission_1489179032660.csv", 0.16476219101173453), // CF
+
     };
     /**
      * Map of the final results.
