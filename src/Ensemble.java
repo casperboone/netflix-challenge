@@ -41,9 +41,11 @@ public class Ensemble {
      * to be able to quickly change weights without recomputing everything.
      */
     private EnsembleSource[] ensembleSources = {
-            new EnsembleSource("submissions/submission_1490457887340.csv", .365), // LF 9 - 0.05 lambda - 0.02 LR
+//            new EnsembleSource("submissions/submission_1490457887340.csv", .365), // LF 9 - 0.05 lambda - 0.02 LR
+//            new EnsembleSource("submissions/submission_1491420825112.csv", .34), // LF - temporal: 9 - 0.04 lambda - 0.02 / 0.002 LR
+            new EnsembleSource("submissions/submission_1491425905643.csv", .36), // LF - gender: 9 - 0.04 lambda - 0.02 / 0.002 LR
             // new EnsembleSource("submissions/submission_1490453791923.csv", .125), // LF 23 - 0.075 lambda - 0.02 LR
-            new EnsembleSource("submissions/submission_1489179032660.csv", .635) // CF
+            new EnsembleSource("submissions/submission_1489179032660.csv", .64) // CF
     };
     /**
      * Map of the final results.

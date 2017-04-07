@@ -30,7 +30,7 @@ public class LatentFactorsTestSet {
         movieList.addRatings(ratings);
 
         // Perform rating predictions
-        LatentFactors.predictRatings(userList, movieList, ratings, predRatings);
+        Util.lf.predictRatings(userList, movieList, ratings, predRatings);
 
         RatingList actualRatings = new RatingList();
         actualRatings.readFile("data/ratings.csv", userList, movieList, true, start, end);

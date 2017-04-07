@@ -45,7 +45,7 @@ public class LatentFactorsCrossValidation {
         LatentFactors.validationSetUnknown = validationUnknownRatings;
 
         // Perform rating predictions (validation RMSE is displayed during running as well)
-        LatentFactors.predictRatings(userList, movieList, trainingRatings, validationUnknownRatings);
+        Util.lf.predictRatings(userList, movieList, trainingRatings, validationUnknownRatings);
 
         // Output final RMSE of validation set
         System.out.println("Validation RMSE: " + Util.rmse(validationUnknownRatings, validationKnownRatings));

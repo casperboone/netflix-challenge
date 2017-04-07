@@ -2,6 +2,7 @@ import java.lang.Math;
 import java.util.*;
 
 public class Util {
+    static LatentFactors lf = new LatentFactorsGender();
 
     public static double calculateCosine(Map<Integer, Double> userX, Map<Integer, Double> userY) {
         // Compute cosine similarity between two users
@@ -81,7 +82,7 @@ public class Util {
         return Math.sqrt(sum / predictions.size());
     }
 
-    public static double rmseKnownRatings(RatingList actualRatings, Matrix P, Matrix Q) {
+    public static double rmseKnownRatings(LatentFactors lf, RatingList actualRatings, Matrix P, Matrix Q) {
         // Determine the predicted rating and compare it with the value of the already known rating
         // Specifically for latent factors
         RatingList predictions = new RatingList();
@@ -90,7 +91,7 @@ public class Util {
             predictions.add(new Rating(
                     rating.getUser(),
                     rating.getMovie(),
-                    LatentFactors.predictRating(actualRatings.getAverageRating(), rating, P, Q)
+                    lf.predictRating(actualRatings.getAverageRating(), rating, P, Q)
             ));
         }
 

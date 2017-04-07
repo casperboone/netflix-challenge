@@ -4,6 +4,7 @@
  * Project Deliverable 02: Latent Factors
  */
 
+import java.io.*;
 import java.lang.System;
 import java.util.*;
 
@@ -13,8 +14,8 @@ public class LatentFactors {
     static int nF = 9;
 
     // Regularization parameters
-    static double lambdaP = 0.05;
-    static double lambdaQ = 0.05;
+    static double lambdaP = 0.04;
+    static double lambdaQ = 0.04;
 
     // Learning rate
     static double learningRate = 0.02;
@@ -33,6 +34,11 @@ public class LatentFactors {
 
     // A list with the validation RMSE per iteration. Used to trace back the performance.
     static List<Double> validationStatistics = new ArrayList<>();
+
+    public UserList userList = null;
+    protected MovieList movieList = null;
+    protected RatingList ratings = null;
+    protected RatingList predRatings = null;
 
     /**
      * Entry point of LatentFactors.
@@ -59,7 +65,7 @@ public class LatentFactors {
         movieList.addRatings(ratings);
 
         // Perform rating predictions
-        predictRatings(userList, movieList, ratings, predRatings);
+        Util.lf.predictRatings(userList, movieList, ratings, predRatings);
 
         // Write result file
         String filename = "submissions/submission_" + System.currentTimeMillis() + ".csv";
@@ -70,8 +76,13 @@ public class LatentFactors {
     /**
      * Predict ratings using latent factors.
      */
-    public static RatingList predictRatings(UserList userList,
-                                            MovieList movieList, RatingList ratingList, RatingList predRatings) {
+    public RatingList predictRatings(UserList userList,
+                                     MovieList movieList, RatingList ratingList, RatingList predRatings) {
+        this.userList = userList;
+        this.movieList = movieList;
+        this.ratings = ratingList;
+        this.predRatings = predRatings;
+
         // Compute mean of all ratings (used for global bias)
         ratingList.computeAverage();
 
@@ -97,6 +108,8 @@ public class LatentFactors {
         Matrix P = Util.initializeLatentFactor(nM, nF); // movies
         Matrix Q = Util.initializeLatentFactor(nU, nF); // users
 
+        writePQToFile(P, Q, "initial");
+
         // P and Q of previous iterations. Used during manual interactive
         // training to go back to a previous state.
         List<Matrix> oldP = new ArrayList<>();
@@ -107,6 +120,10 @@ public class LatentFactors {
 
         // Perform optimization over at most maxIterations
         for (int i = 0; i < maxIterations; i++) {
+            if (i > 25) {
+                learningRate = 0.002;
+            }
+
             // Add current P and Q to the history lists.
             oldP.add(P.duplicate());
             oldQ.add(Q.duplicate());
@@ -145,7 +162,7 @@ public class LatentFactors {
             }
 
             // Compute RMSE of training set
-            double RMSE = Util.rmseKnownRatings(ratingList, P, Q);
+            double RMSE = Util.rmseKnownRatings(this, ratingList, P, Q);
             // If difference between the average of the last two RMSEs of the training set
             // and the current RMSE, is smaller than this value, we stop training.
             if (Math.abs(((previousRMSE[0] + previousRMSE[1]) / 2) - RMSE) <= xTolerance) {
@@ -162,6 +179,17 @@ public class LatentFactors {
             double validationRMSE = computeValidationSetRMSE(ratingList, Q, P);
             System.out.println("Validation set RMSE: " + computeValidationSetRMSE(ratingList, Q, P));
             validationStatistics.add(validationRMSE);
+
+            boolean writeToFile = true;
+            if (writeToFile) {
+                writePQToFile(P, Q, Integer.toString(i));
+            }
+
+        }
+
+        boolean writeToFile = true;
+        if (writeToFile) {
+            writePQToFile(P, Q, "final");
         }
 
         // Loop over to-be-predicted ratings to predict them
@@ -181,12 +209,11 @@ public class LatentFactors {
     /**
      * Predict the current rating of a certain movie/user pair with the following formula:
      * rating = dot(P[movie], Q[user]) + mean + user bias + movie bias
-     *
+     * <p>
      * We cap the rating if it is below 1 and above 5 to its boundary.
      */
-    public static double predictRating(double mean, Rating ratingDetails, Matrix P, Matrix Q) {
-        double rating = mean + ratingDetails.getUser().getBias(mean) + ratingDetails.getMovie().getBias(mean)
-                + Util.innerProduct(Q.get(ratingDetails.getUser().getIndex() - 1), P.get(ratingDetails.getMovie().getIndex() - 1));
+    public double predictRating(double mean, Rating ratingDetails, Matrix P, Matrix Q) {
+        double rating = computeRating(mean, ratingDetails, P, Q);
 
         if (rating > 5) {
             return 5;
@@ -198,10 +225,15 @@ public class LatentFactors {
         return rating;
     }
 
+    protected double computeRating(double mean, Rating ratingDetails, Matrix P, Matrix Q) {
+        return mean + ratingDetails.getUser().getBias(mean) + ratingDetails.getMovie().getBias(mean)
+                + Util.innerProduct(Q.get(ratingDetails.getUser().getIndex() - 1), P.get(ratingDetails.getMovie().getIndex() - 1));
+    }
+
     /**
      * Compute the RMSE of the validation set (if we have a validation set).
      */
-    private static double computeValidationSetRMSE(RatingList ratingList, Matrix Q, Matrix P) {
+    protected double computeValidationSetRMSE(RatingList ratingList, Matrix Q, Matrix P) {
         if (validationSetKnown == null || validationSetUnknown == null) {
             return -1;
         }
@@ -212,6 +244,24 @@ public class LatentFactors {
         }
 
         return Util.rmse(validationSetUnknown, validationSetKnown);
+    }
+
+    public static int writePQToFile(Matrix P, Matrix Q, String name) {
+        List<Matrix> pqList = new ArrayList<>();
+        pqList.add(P);
+        pqList.add(Q);
+
+        try (
+                OutputStream file = new FileOutputStream("pq/" + name + "_pq.mat");
+                OutputStream buffer = new BufferedOutputStream(file);
+                ObjectOutput output = new ObjectOutputStream(buffer)
+        ) {
+            output.writeObject(pqList);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return 123;
     }
 
 }

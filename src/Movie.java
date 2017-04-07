@@ -1,4 +1,5 @@
 import java.util.HashMap;
+import java.util.Map;
 
 public class Movie {
 
@@ -8,6 +9,9 @@ public class Movie {
     private HashMap<Integer, Double> ratings;
     private double averageRating;
     private HashMap<Movie, Neighbour<Movie>> otherMovies;
+    private int totalMale = -1;
+    private int totalFemale = -1;
+    private double averageAge = Double.NEGATIVE_INFINITY;
 
     public Movie(int index, int year, String title) {
         this.index = index;
@@ -76,5 +80,46 @@ public class Movie {
         this.otherMovies = otherMovies;
     }
 
+    public int getTotalMale(UserList users) {
+        if (totalMale == -1) {
+            totalMale = 0;
+            for (Map.Entry<Integer, Double> rating : ratings.entrySet()) {
+                User user = users.get(rating.getKey());
+                if (user.isMale() && rating.getValue() > 3) {
+                    totalMale++;
+                }
+            }
+        }
+        return totalMale;
+    }
+
+    public int getTotalFemale(UserList users) {
+        if (totalFemale == -1) {
+            totalFemale = 0;
+            for (Map.Entry<Integer, Double> rating : ratings.entrySet()) {
+                User user = users.get(rating.getKey());
+                if (!user.isMale() && rating.getValue() > 3) {
+                    totalFemale++;
+                }
+            }
+        }
+        return totalFemale;
+    }
+
+    public double getAverageAge(UserList users) {
+        if (Double.isInfinite(averageAge)) {
+            int count = 0;
+            int total = 0;
+            for (Map.Entry<Integer, Double> rating : ratings.entrySet()) {
+                User user = users.get(rating.getKey());
+                if (rating.getValue() > 3 && user.getAge() != 1) {
+                    total += user.getAge();
+                    count++;
+                }
+            }
+            averageAge = total / (double) count;
+        }
+        return averageAge;
+    }
 }
 
