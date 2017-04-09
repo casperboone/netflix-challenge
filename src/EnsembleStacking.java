@@ -26,8 +26,8 @@ public class EnsembleStacking {
 //            new EnsembleSource("stacking/temporal_23f_075lbd_85643.csv", 0.0),
 
             new EnsembleSource("stacking/collaborative_filtering.csv", 0.0),
-            new EnsembleSource("stacking/collaborative_filtering.csv", 0.0),
-            new EnsembleSource("stacking/collaborative_filtering.csv", 0.0),
+//            new EnsembleSource("stacking/collaborative_filtering.csv", 0.0),
+//            new EnsembleSource("stacking/collaborative_filtering.csv", 0.0),
     };
 
     private EnsembleSource actualTrainRatings = new EnsembleSource("stacking/actual_train_ratings.csv", 500);
@@ -49,6 +49,10 @@ public class EnsembleStacking {
         readFile(actualTrainRatings);
         normalize(actualTrainRatings.getItems());
 
+
+        for (EnsembleSource trainSource : trainSources) {
+            trainSource.initializeWeight();
+        }
 
         ArrayList<ArrayList<Integer>> folds = createFolds();
 
@@ -82,7 +86,7 @@ public class EnsembleStacking {
             trainSource.initializeWeight();
         }
 
-        int maxIterations = 200;
+        int maxIterations = 30;
         double learningRate = 0.001;
 
         for (int iter = 0; iter < maxIterations; iter++) {
@@ -94,8 +98,10 @@ public class EnsembleStacking {
 
                     for (EnsembleSource trainSource : trainSources) {
                         double b = trainSource.getItems().get(trainKey);
+                        double a = actualTrainRatings.getItems().get(trainKey);
+//                        System.out.println(a + " " + yHat);
                         double val = trainSource.getWeight()
-                                + learningRate * (b - yHat);
+                                + learningRate * (trainSource.getWeight() * b * (a - yHat));
 
 //                        double val = trainSource.getWeight()
 //                                + learningRate * (actualTrainRatings.getItems().get(trainKey) - trainSource.getItems().get(trainKey));

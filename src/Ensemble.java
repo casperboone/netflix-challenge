@@ -21,9 +21,9 @@ public class Ensemble {
 ////            new EnsembleSource("submissions/submission_1489179032660.csv", .64) // CF
 
 
-            new EnsembleSource("submissions/submission_1491577351210.csv", 0.25265622258547543), // gender_23f_04lbd_85658
-            new EnsembleSource("submissions/submission_1491577293903.csv", 0.2160796452848671), // temporal_9f_04lbd_85819
-            new EnsembleSource("submissions/submission_1491425905643.csv", 0.03706982596208227), // LF - gender: 9 - 0.04 lambda - 0.02 / 0.002 LR
+            new EnsembleSource("submissions/submission_1491577351210.csv", 0.20726259707750452), // gender_23f_04lbd_85658
+            new EnsembleSource("submissions/submission_1491577293903.csv", 0.056908229557956116), // temporal_9f_04lbd_85819
+            new EnsembleSource("submissions/submission_1491425905643.csv", 0.06596264733489368), // LF - gender: 9 - 0.04 lambda - 0.02 / 0.002 LR
 
 
 //            new EnsembleSource("submissions/age_9f_04lbd_85893.csv", 0.11882958585089694),
@@ -32,9 +32,9 @@ public class Ensemble {
 //            new EnsembleSource("submissions/standard_23f_075lbd_86019.csv", 0.12684913076295615),
 //            new EnsembleSource("submissions/temporal_23f_075lbd_85643.csv", 0.21201871037134407),
 
-            new EnsembleSource("submissions/submission_1489179032660.csv", 0.16468312670116678), // CF
-            new EnsembleSource("submissions/submission_1489179032660.csv", 0.1647489884546739), // CF
-            new EnsembleSource("submissions/submission_1489179032660.csv", 0.16476219101173453), // CF
+            new EnsembleSource("submissions/submission_1489179032660.csv", 0.6698665260296457), // CF
+//            new EnsembleSource("submissions/submission_1489179032660.csv", 0.1647489884546739), // CF
+//            new EnsembleSource("submissions/submission_1489179032660.csv", 0.16476219101173453), // CF
 
     };
     /**
