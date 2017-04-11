@@ -1,13 +1,10 @@
-/* TU Delft
- * BSc Computer Science
- * TI2735-C Data Mining 2016-2017
- * Project Deliverable 02: Latent Factors
- */
-
 import java.io.*;
 import java.lang.System;
 import java.util.*;
 
+/**
+ * Latent factor model.
+ */
 public class LatentFactors {
 
     // Number of factors
@@ -108,6 +105,7 @@ public class LatentFactors {
         Matrix P = Util.initializeLatentFactor(nM, nF); // movies
         Matrix Q = Util.initializeLatentFactor(nU, nF); // users
 
+        // Save initial P and Q, used for debugging and backtracking to optimal points
         writePQToFile(P, Q, "initial");
 
         // P and Q of previous iterations. Used during manual interactive
@@ -180,17 +178,12 @@ public class LatentFactors {
             System.out.println("Validation set RMSE: " + computeValidationSetRMSE(ratingList, Q, P));
             validationStatistics.add(validationRMSE);
 
-            boolean writeToFile = true;
-            if (writeToFile) {
-                writePQToFile(P, Q, Integer.toString(i));
-            }
-
+            // Save P and Q, used for debugging and backtracking to optimal points
+            writePQToFile(P, Q, Integer.toString(i));
         }
 
-        boolean writeToFile = true;
-        if (writeToFile) {
-            writePQToFile(P, Q, "final");
-        }
+        // Save P and Q, used for debugging and backtracking to optimal points
+        writePQToFile(P, Q, "final");
 
         // Loop over to-be-predicted ratings to predict them
         System.out.print("Running predictions..");
@@ -225,6 +218,10 @@ public class LatentFactors {
         return rating;
     }
 
+    /**
+     * Computes the current rating of a certain movie/user pair with the following formula:
+     * rating = dot(P[movie], Q[user]) + mean + user bias + movie bias
+     */
     protected double computeRating(double mean, Rating ratingDetails, Matrix P, Matrix Q) {
         return mean + ratingDetails.getUser().getBias(mean) + ratingDetails.getMovie().getBias(mean)
                 + Util.innerProduct(Q.get(ratingDetails.getUser().getIndex() - 1), P.get(ratingDetails.getMovie().getIndex() - 1));
@@ -246,7 +243,10 @@ public class LatentFactors {
         return Util.rmse(validationSetUnknown, validationSetKnown);
     }
 
-    public static int writePQToFile(Matrix P, Matrix Q, String name) {
+    /**
+     * Write P and Q to file, used for debugging and backtracking to optimal points.
+     */
+    public static void writePQToFile(Matrix P, Matrix Q, String name) {
         List<Matrix> pqList = new ArrayList<>();
         pqList.add(P);
         pqList.add(Q);
@@ -260,8 +260,6 @@ public class LatentFactors {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        return 123;
     }
 
 }

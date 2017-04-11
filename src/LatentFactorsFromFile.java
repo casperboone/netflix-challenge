@@ -1,6 +1,9 @@
 import java.io.*;
 import java.util.List;
 
+/**
+ * Generate a Latent Factors result by restoring a saved P and Q from file.
+ */
 public class LatentFactorsFromFile {
 
     public static void main(String[] args) {
@@ -57,15 +60,7 @@ public class LatentFactorsFromFile {
             rating.setRating(Util.lf.predictRating(ratings.getAverageRating(), rating, P, Q));
         }
 
-//        new EnsembleSource("stacking/age_9f_04lbd_85893.csv", 0.0),
-//                new EnsembleSource("stacking/age_23f_075lbd_85937.csv", 0.0),
-//                new EnsembleSource("stacking/standard_9f_04lbd_85562.csv", 0.0),
-//                new EnsembleSource("stacking/standard_23f_075lbd_86019.csv", 0.0),
-//                new EnsembleSource("stacking/temporal_23f_075lbd_85643.csv", 0.0),
-
-//        String filename = "stacking/temporal_23f_075lbd_85643.csv";
         String filename = "submissions/temporal_23f_075lbd_85643.csv";
-//        String filename = "submissions/submission_" + System.currentTimeMillis() + ".csv";
         System.out.println(filename);
         predRatings.writeResultsFile(filename);
     }

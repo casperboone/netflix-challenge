@@ -3,9 +3,9 @@ import java.util.HashMap;
 import java.util.Random;
 
 /**
- * A source used in ensemble actions.
+ * A source used in ensemble classes.
  */
-public class EnsembleSource {
+public class CombinerSource {
     private String fileName;
     private double weight;
     private double fixedWeight;
@@ -26,7 +26,7 @@ public class EnsembleSource {
      */
     private HashMap<Integer, Double> items = new HashMap<>();
 
-    public EnsembleSource(String fileName, double weight) {
+    public CombinerSource(String fileName, double weight) {
         this.fileName = fileName;
         this.weight = weight;
     }

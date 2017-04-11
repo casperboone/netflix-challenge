@@ -1,4 +1,7 @@
-public class CollaborativeFilteringTestSet {
+/**
+ * This class is used to perform cross validation with a fixed size training/validation set.
+ */
+public class CollaborativeFilteringValidationSet {
     public static void main(String[] args) throws InterruptedException {
         int start = 0;
         int size = 9000;

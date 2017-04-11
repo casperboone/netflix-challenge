@@ -80,6 +80,9 @@ public class Movie {
         this.otherMovies = otherMovies;
     }
 
+    /**
+     * Get total male viewers that rated higher than 3.
+     */
     public int getTotalMale(UserList users) {
         if (totalMale == -1) {
             totalMale = 0;
@@ -92,7 +95,9 @@ public class Movie {
         }
         return totalMale;
     }
-
+    /**
+     * Get total female viewers that rated higher than 3.
+     */
     public int getTotalFemale(UserList users) {
         if (totalFemale == -1) {
             totalFemale = 0;
@@ -106,6 +111,9 @@ public class Movie {
         return totalFemale;
     }
 
+    /**
+     * Get average age of people that rated higher than 3.
+     */
     public double getAverageAge(UserList users) {
         if (Double.isInfinite(averageAge)) {
             int count = 0;

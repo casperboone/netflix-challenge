@@ -1,4 +1,7 @@
-
+/**
+ * Generates a file in Kaggle format with all predicted training ratings by CF.
+ * This is used for the trained combiner.
+ */
 public class CollaborativeFilteringTrainRatingsGenerator {
     public static void main(String[] args) throws InterruptedException {
         // Read user list

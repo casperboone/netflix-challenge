@@ -1,8 +1,15 @@
+/**
+ * Latent Factors with gender bias. Before running this change Util.lf to this class.
+ */
 public class LatentFactorsGender extends LatentFactors {
     static double lambdaGender = 0.1;
 
-    // MAYBE SHOULD BE SOMETHING WITH AVERAGE OF PEOPLE WITH SAME GENDER
-
+    /**
+     * r = originalR +  λgender *(number of people with same gender that rated the movie higher than 3 /
+     * total number of people that rated higher than 3) - 0.5
+     * -0.5 is so that the bias has a negative impact when it is not a good recommendation
+     * based on gender.
+     */
     @Override
     protected double computeRating(double mean, Rating ratingDetails, Matrix P, Matrix Q) {
         // total male ranked higher than 3

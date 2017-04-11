@@ -3,6 +3,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
+/**
+ * Main Collaborative Filtering class. Actual predictions are done
+ * by instances of the Predictor class. This class prepares,
+ * manages and coordinates the predictors.
+ */
 public class CollaborativeFiltering {
     public final static int NEIGHBOURHOOD_SIZE = 25;
     public final static int MAX_THREADS = 20;

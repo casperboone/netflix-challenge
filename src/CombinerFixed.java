@@ -6,33 +6,25 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Fixed combiner.
+ * Fixed combiner. Computes weighted average of ensemble sources.
  */
-public class Ensemble {
+public class CombinerFixed {
     /**
      * List of sources to be used including the weight they should have. It is based on files
      * to be able to quickly change weights without recomputing everything.
      */
-    private EnsembleSource[] ensembleSources = {
-//            new EnsembleSource("submissions/submission_1490457887340.csv", .365), // LF 9 - 0.05 lambda - 0.02 LR
-//            new EnsembleSource("submissions/submission_1491420825112.csv", .34), // LF - temporal: 9 - 0.04 lambda - 0.02 / 0.002 LR
-////           new EnsembleSource("submissions/submission_1491425905643.csv", .36), // LF - gender: 9 - 0.04 lambda - 0.02 / 0.002 LR
-            // new EnsembleSource("submissions/submission_1490453791923.csv", .125), // LF 23 - 0.075 lambda - 0.02 LR
-////            new EnsembleSource("submissions/submission_1489179032660.csv", .64) // CF
+    private CombinerSource[] combinerSources = {
+            new CombinerSource("submissions/submission_1489179032660.csv", 0.582538959704592), // CF
 
-//0 0.18701101673360362 - 1 0.05967909963318337 - 2 0.05607387604102836 - 3 0.6972360075921846
-            new EnsembleSource("submissions/submission_1491577351210.csv", 0.211869548054501), // gender_23f_04lbd_85658
-            new EnsembleSource("submissions/submission_1491577293903.csv", 0.057247634568384), // temporal_9f_04lbd_85819
-            new EnsembleSource("submissions/submission_1491425905643.csv", 0.064238931049254), // LF - gender: 9 - 0.04 lambda - 0.02 / 0.002 LR
+            new CombinerSource("submissions/submission_1491577351210.csv", 0.211869548054501), // gender_23f_04lbd_85658
+            new CombinerSource("submissions/submission_1491577293903.csv", 0.057247634568384), // temporal_9f_04lbd_85819
+            new CombinerSource("submissions/submission_1491425905643.csv", 0.064238931049254), // LF - gender: 9 - 0.04 lambda - 0.02 / 0.002 LR
 
-
-//            new EnsembleSource("submissions/age_9f_04lbd_85893.csv", 0.11882958585089694),
-//            new EnsembleSource("submissions/age_23f_075lbd_85937.csv", 0.07644448269935332),
-//            new EnsembleSource("submissions/standard_9f_04lbd_85562.csv", 0.12136516103896347),
-//            new EnsembleSource("submissions/standard_23f_075lbd_86019.csv", 0.12684913076295615),
-//            new EnsembleSource("submissions/temporal_23f_075lbd_85643.csv", 0.21201871037134407),
-
-            new EnsembleSource("submissions/submission_1489179032660.csv", 0.582538959704592), // CF
+//            new CombinerSource("submissions/age_9f_04lbd_85893.csv", 0.11882958585089694),
+//            new CombinerSource("submissions/age_23f_075lbd_85937.csv", 0.07644448269935332),
+//            new CombinerSource("submissions/standard_9f_04lbd_85562.csv", 0.12136516103896347),
+//            new CombinerSource("submissions/standard_23f_075lbd_86019.csv", 0.12684913076295615),
+//            new CombinerSource("submissions/temporal_23f_075lbd_85643.csv", 0.21201871037134407),
     };
     /**
      * Map of the final results.
@@ -42,17 +34,17 @@ public class Ensemble {
     /**
      * Perform ensemble actions.
      */
-    public Ensemble() {
+    public CombinerFixed() {
         // Read all sources from file into memory
-        for (EnsembleSource ensembleSource : ensembleSources) {
-            readFile(ensembleSource);
+        for (CombinerSource combinerSource : combinerSources) {
+            readFile(combinerSource);
         }
 
         // For a certain item in all sources, multiply it with the weight and add it to the total of the item
-        for (Integer key : ensembleSources[0].getItems().keySet()) {
+        for (Integer key : combinerSources[0].getItems().keySet()) {
             double sum = 0.0;
-            for (EnsembleSource ensembleSource : ensembleSources) {
-                sum += ensembleSource.getWeight() * ensembleSource.getItems().get(key);
+            for (CombinerSource combinerSource : combinerSources) {
+                sum += combinerSource.getWeight() * combinerSource.getItems().get(key);
             }
             results.put(key, sum);
         }
@@ -67,7 +59,7 @@ public class Ensemble {
      * Entry point of ensemble executor.
      */
     public static void main(String[] args) {
-        new Ensemble();
+        new CombinerFixed();
     }
 
     /**
@@ -75,7 +67,7 @@ public class Ensemble {
      *
      * @param source An ensemble source
      */
-    private void readFile(EnsembleSource source) {
+    private void readFile(CombinerSource source) {
         BufferedReader br = null;
         String line;
         try {

@@ -1,5 +1,6 @@
 /**
- * Created by casperboone on 07-04-17.
+ * Generates a file in Kaggle format with all training ratings.
+ * This is used for the trained combiner.
  */
 public class ActualTrainRatingsGenerator {
 

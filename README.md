@@ -1,8 +1,13 @@
 # Movie Recommendations
 
+## Deliverable 3
+Final (Kaggle) Score: 0.83604
+Kaggle name: Casper Boone
+
+New/changed classes for this submission
+
 ## Deliverable 2
 Final (Kaggle) Score: 0.83711
-Rank: 4
 Kaggle name: Casper Boone
 
 New/changed classes for this submission
@@ -36,7 +41,7 @@ Most important features (not a complete list):
 * Multi threading for improved performance (total run time is about 180s)
 * Similarity caching for improved performance (slow for first iterations, but then the algorithm moves on to predicting about 40k rating per 5s)
 * Global / local biases
-* Light version of cross validation that gives a RMSE as a result. Which can later on also be used for training parameters. (`CollaborativeFilteringTestSet`)
+* Light version of cross validation that gives a RMSE as a result. Which can later on also be used for training parameters. (`CollaborativeFilteringValidationSet`)
 
 Short overview of the multithreaded workflow: `CollaborativeFiltering` divides the predictions(.csv) over all predictors (all predictors are a separate thread, the number of concurrent threads is limited to 20).
 A `Predictor` is created with a given range (start to end) of predictions(.csv), for which it will predict the rating.
