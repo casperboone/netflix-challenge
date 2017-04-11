@@ -1,7 +1,7 @@
 public class CollaborativeFilteringTestSet {
     public static void main(String[] args) throws InterruptedException {
         int start = 0;
-        int size = 90000;
+        int size = 9000;
 
         // Read user list
         UserList userList = new UserList();

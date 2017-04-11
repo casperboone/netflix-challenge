@@ -2,7 +2,7 @@ import java.lang.Math;
 import java.util.*;
 
 public class Util {
-    static LatentFactors lf = new LatentFactorsAge();
+    static LatentFactors lf = new LatentFactorsGender();
 
     public static double calculateCosine(Map<Integer, Double> userX, Map<Integer, Double> userY) {
         // Compute cosine similarity between two users

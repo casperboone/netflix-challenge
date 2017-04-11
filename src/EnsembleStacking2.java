@@ -2,21 +2,23 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.lang.reflect.Array;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 // coeff initializen
 
 /**
  * Executes ensemble actions.
  */
-public class EnsembleStacking {
+public class EnsembleStacking2 {
 
     int numberOfFolds = 20;
 
     private EnsembleSource[] trainSources = { // winning 0.028630998907666745 - 1 0.07834832922747179 - 2 0.5803512789872395 - 3 0.312669392877622
-            new EnsembleSource("stacking/gender_23f_04lbd_85658.csv", 0.0), //vrijwel 0
-            new EnsembleSource("stacking/temporal_9f_04lbd_85819.csv", 0.0), // vrij wel 0
+//            new EnsembleSource("stacking/gender_23f_04lbd_85658.csv", 0.0), //vrijwel 0
+//            new EnsembleSource("stacking/temporal_9f_04lbd_85819.csv", 0.0), // vrij wel 0
             new EnsembleSource("stacking/gender_9f_04lbd_85535.csv", 0.0),
 
 //            new EnsembleSource("stacking/age_9f_04lbd_85893.csv", 0.0),
@@ -40,7 +42,7 @@ public class EnsembleStacking {
     /**
      * Perform ensemble actions.
      */
-    public EnsembleStacking() {
+    public EnsembleStacking2() {
         // Read all sources from file into memory
         for (EnsembleSource ensembleSource : trainSources) {
             readFile(ensembleSource);
@@ -63,7 +65,44 @@ public class EnsembleStacking {
             ArrayList<ArrayList<Integer>> train = new ArrayList<>(folds);
             train.remove(test);
 
-            trainModel(train);
+
+            ///////
+
+            for (EnsembleSource trainSource : trainSources) {
+
+                double a = 0.0;
+                double b = 0.0;
+
+                for (ArrayList<Integer> trainKeys : train) {
+                    for (int trainKey : trainKeys) {
+                        a += Math.pow(trainSource.getItems().get(trainKey), 2);
+                        b += trainSource.getItems().get(trainKey) * actualTrainRatings.getItems().get(trainKey); //~
+                    }
+                }
+
+                a = Math.pow(a, -1);
+
+                double weight = a * b;
+
+                trainSource.setWeight(weight);
+
+
+            }
+
+            fixWeights();
+
+            int i = 0;
+            for (EnsembleSource trainSource : trainSources) {
+                System.out.print(i + " " + trainSource.getWeightAveragedWeighedByRMSE() + " - ");
+                i++;
+            }
+            System.out.println();
+
+
+
+            //////
+
+//            trainModel(train);
 
             System.out.println(computeTestRMSE(test));
         }
@@ -103,11 +142,11 @@ public class EnsembleStacking {
 //                        double val = trainSource.getWeight()
 //                                + learningRate * (b * (a - yHat) + 0.04 * b);
 
-//                        double val = trainSource.getWeight()
-//                                + learningRate * (b * (a - yHat) + 0.02 * trainSource.getFixedWeight());
-
                         double val = trainSource.getWeight()
-                                + learningRate * (actualTrainRatings.getItems().get(trainKey) - trainSource.getItems().get(trainKey));
+                                + learningRate * (b * (a - yHat) + 0.02 * trainSource.getFixedWeight());
+
+//                        double val = trainSource.getWeight()
+//                                + learningRate * (actualTrainRatings.getItems().get(trainKey) - trainSource.getItems().get(trainKey));
 
 
                         trainSource.setWeight(val);
@@ -221,7 +260,7 @@ public class EnsembleStacking {
      * Entry point of ensemble executor.
      */
     public static void main(String[] args) {
-        new EnsembleStacking();
+        new EnsembleStacking2();
     }
 
     /**

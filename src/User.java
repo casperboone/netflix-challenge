@@ -11,6 +11,7 @@ public class User {
     private HashMap<Integer, Double> ratings;
     private HashMap<Integer, Double> normalizedRatings;
     private double averageRating;
+    private HashMap<User, Neighbour<User>> otherUsers;
 
     public User(int index, boolean male, int age, int profession) {
         this.index = index;
@@ -88,5 +89,20 @@ public class User {
      */
     public HashMap<Integer, Double> getNormalizedRatings() {
         return normalizedRatings;
+    }
+
+
+    /**
+     * Get distances (similary) from this movie to all other movies.
+     */
+    public HashMap<User, Neighbour<User>> getOtherUsers() {
+        return otherUsers;
+    }
+
+    /**
+     * Set distances (similary) from this movie to all other movies.
+     */
+    public void setOtherUsers(HashMap<User, Neighbour<User>> otherUsers) {
+        this.otherUsers = otherUsers;
     }
 }
